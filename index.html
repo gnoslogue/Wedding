@@ -67,13 +67,19 @@
       padding-top: max(56px, env(safe-area-inset-top));
       padding-bottom: 46px;
       background:
-        linear-gradient(to bottom, rgba(55,48,42,.08), rgba(55,48,42,.18)),
-        url("./images/main.jpg") center/cover no-repeat,
+        linear-gradient(
+          to bottom,
+          rgba(40,36,32,.22) 0%,
+          rgba(40,36,32,.05) 24%,
+          rgba(40,36,32,.02) 62%,
+          rgba(40,36,32,.24) 100%
+        ),
+        url("./images/main.jpg") center 48%/cover no-repeat,
         #d7cfc4;
       color: #fff;
       text-shadow:
-        0 1px 2px rgba(0,0,0,.32),
-        0 3px 12px rgba(0,0,0,.22);
+        0 1px 2px rgba(0,0,0,.38),
+        0 3px 14px rgba(0,0,0,.24);
     }
 
     .hero-top {
