@@ -321,6 +321,163 @@
       letter-spacing: .04em;
     }
 
+
+    .family-lines {
+      max-width: 360px;
+      margin: 34px auto 0;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+      line-height: 2;
+      color: #5f5851;
+    }
+
+    .family-lines .parents {
+      color: var(--sub);
+    }
+
+    .family-lines strong {
+      color: #3f3a35;
+      font-weight: 600;
+    }
+
+    .contact-group + .contact-group {
+      margin-top: 34px;
+    }
+
+    .side-title {
+      max-width: 390px;
+      margin: 0 auto 10px;
+      text-align: left;
+      font-size: 12px;
+      letter-spacing: .08em;
+      color: var(--sub);
+    }
+
+    .account-note {
+      margin: 0 0 28px;
+      font-size: 13px;
+      color: var(--sub);
+    }
+
+    .account-accordion {
+      max-width: 390px;
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    .account-accordion details {
+      border-top: 1px solid var(--line);
+    }
+
+    .account-accordion details:last-child {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .account-accordion summary {
+      position: relative;
+      padding: 18px 30px 18px 0;
+      cursor: pointer;
+      list-style: none;
+      font-size: 14px;
+      color: #4f4943;
+    }
+
+    .account-accordion summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .account-accordion summary::after {
+      content: "+";
+      position: absolute;
+      right: 2px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      font-weight: 300;
+      color: #928b82;
+    }
+
+    .account-accordion details[open] summary::after {
+      content: "−";
+    }
+
+    .account-accordion .account-list {
+      margin: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .account-accordion .row:last-child {
+      border-bottom: 0;
+    }
+
+
+    .info-note {
+      margin: 0 0 32px;
+      font-size: 13px;
+      color: var(--sub);
+    }
+
+    .info-side {
+      max-width: 390px;
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    .info-side + .info-side {
+      margin-top: 38px;
+    }
+
+    .info-person {
+      border-top: 1px solid var(--line);
+      padding: 16px 0 14px;
+    }
+
+    .info-person:last-child {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .person-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .person-main .label {
+      font-size: 14px;
+      color: #4f4943;
+    }
+
+    .person-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .info-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 52px;
+      height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: transparent;
+      color: #6f685f;
+      font: inherit;
+      font-size: 12px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .person-detail {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #9a928a;
+    }
+
     @media (max-width: 360px) {
       section { padding-left: 22px; padding-right: 22px; }
       .hero-bottom h1 { font-size: 30px; }
@@ -337,7 +494,6 @@
 
       <div class="hero-bottom">
         <h1>조민재 <span class="amp">&</span> 김은별</h1>
-        <div class="place">AW컨벤션 · 6층 파티오볼룸</div>
       </div>
     </section>
 
@@ -354,8 +510,9 @@
         더없이 기쁘고 감사하겠습니다.
       </p>
 
-      <div class="names">
-        조민재 <span style="color:#aaa19a">·</span> 김은별
+      <div class="family-lines" aria-label="혼주 및 신랑 신부 소개">
+        <div><span class="parents">신랑 아버지 · 신랑 어머니</span>의 아들 <strong>민재</strong></div>
+        <div><span class="parents">신부 아버지 · 신부 어머니</span>의 딸 <strong>은별</strong></div>
       </div>
     </section>
 
@@ -382,23 +539,6 @@
     </section>
 
     <div class="divider"></div>
-
-    <section class="gallery">
-      <p class="eyebrow">Gallery</p>
-      <h2>우리의 순간</h2>
-
-      <div class="gallery-grid">
-        <div class="placeholder">사진 01</div>
-        <div class="placeholder">사진 02</div>
-        <div class="placeholder">사진 03</div>
-        <div class="placeholder">사진 04</div>
-        <div class="placeholder">사진 05</div>
-        <div class="placeholder">사진 06</div>
-      </div>
-    </section>
-
-    <div class="divider"></div>
-
     <section class="location">
       <p class="eyebrow">Location</p>
       <h2>오시는 길</h2>
@@ -422,55 +562,127 @@
         <p style="margin:0 0 14px;"><strong style="color:#4f4943;">버스</strong><br>
         문화숲의 광장 정류장: 88번<br>
         동남레이크빌 정류장: 99-1번, 3100번</p>
+      </div>
+    </section>
+    <div class="divider"></div>
 
-        <p style="margin:0;"><strong style="color:#4f4943;">예식장</strong><br>
-        AW컨벤션 6층 파티오볼룸</p>
+    <section class="gallery">
+      <p class="eyebrow">Gallery</p>
+      <h2>우리의 순간</h2>
+
+      <div class="gallery-grid">
+        <div class="placeholder">사진 01</div>
+        <div class="placeholder">사진 02</div>
+        <div class="placeholder">사진 03</div>
+        <div class="placeholder">사진 04</div>
+        <div class="placeholder">사진 05</div>
+        <div class="placeholder">사진 06</div>
       </div>
     </section>
 
     <div class="divider"></div>
 
-    <section class="contact">
-      <p class="eyebrow">Contact</p>
-      <h2>연락하기</h2>
+    <section class="info">
+      <p class="eyebrow">Info</p>
+      <h2>연락처 및 계좌 안내</h2>
+      <p class="info-note">필요하신 분들을 위해 연락처와 계좌 정보를 함께 안내드립니다.</p>
 
-      <div class="contact-list">
-        <div class="row">
-          <span class="label">신랑 조민재</span>
-          <span class="value">전화번호 입력 예정</span>
+      <div class="info-side">
+        <div class="side-title">신랑측</div>
+
+        <div class="info-person">
+          <div class="person-main">
+            <span class="label">신랑 조민재</span>
+            <div class="person-actions">
+              <a class="info-action" href="tel:01000000000">전화</a>
+              <button class="info-action copy-account" type="button" data-account="국민은행 000000-00-000000">계좌</button>
+            </div>
+          </div>
+          <div class="person-detail">010-0000-0000 · 국민은행 000000-00-000000</div>
         </div>
-        <div class="row">
-          <span class="label">신부 김은별</span>
-          <span class="value">전화번호 입력 예정</span>
+
+        <div class="info-person">
+          <div class="person-main">
+            <span class="label">아버지</span>
+            <div class="person-actions">
+              <a class="info-action" href="tel:01000000001">전화</a>
+              <button class="info-action copy-account" type="button" data-account="신한은행 000-000-000000">계좌</button>
+            </div>
+          </div>
+          <div class="person-detail">010-0000-0001 · 신한은행 000-000-000000</div>
+        </div>
+
+        <div class="info-person">
+          <div class="person-main">
+            <span class="label">어머니</span>
+            <div class="person-actions">
+              <a class="info-action" href="tel:01000000002">전화</a>
+              <button class="info-action copy-account" type="button" data-account="우리은행 0000-000-000000">계좌</button>
+            </div>
+          </div>
+          <div class="person-detail">010-0000-0002 · 우리은행 0000-000-000000</div>
+        </div>
+      </div>
+
+      <div class="info-side">
+        <div class="side-title">신부측</div>
+
+        <div class="info-person">
+          <div class="person-main">
+            <span class="label">신부 김은별</span>
+            <div class="person-actions">
+              <a class="info-action" href="tel:01000000003">전화</a>
+              <button class="info-action copy-account" type="button" data-account="하나은행 000-000000-00000">계좌</button>
+            </div>
+          </div>
+          <div class="person-detail">010-0000-0003 · 하나은행 000-000000-00000</div>
+        </div>
+
+        <div class="info-person">
+          <div class="person-main">
+            <span class="label">아버지</span>
+            <div class="person-actions">
+              <a class="info-action" href="tel:01000000004">전화</a>
+              <button class="info-action copy-account" type="button" data-account="농협은행 000-0000-0000-00">계좌</button>
+            </div>
+          </div>
+          <div class="person-detail">010-0000-0004 · 농협은행 000-0000-0000-00</div>
+        </div>
+
+        <div class="info-person">
+          <div class="person-main">
+            <span class="label">어머니</span>
+            <div class="person-actions">
+              <a class="info-action" href="tel:01000000005">전화</a>
+              <button class="info-action copy-account" type="button" data-account="카카오뱅크 0000-00-0000000">계좌</button>
+            </div>
+          </div>
+          <div class="person-detail">010-0000-0005 · 카카오뱅크 0000-00-0000000</div>
         </div>
       </div>
     </section>
 
-    <div class="divider"></div>
-
-    <section class="account">
-      <p class="eyebrow">For Your Heart</p>
-      <h2>마음 전하실 곳</h2>
-
-      <div class="account-list">
-        <div class="row">
-          <span class="label">신랑측</span>
-          <button class="disabled">계좌번호 입력 예정</button>
-        </div>
-        <div class="row">
-          <span class="label">신부측</span>
-          <button class="disabled">계좌번호 입력 예정</button>
-        </div>
-      </div>
-    </section>
-
-    <footer>
-      조민재 & 김은별<br />
-      2026. 10. 31.
-    </footer>
+    <footer>소중한 걸음에 감사드립니다.</footer>
   </main>
 
-  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=22b361d83f7cbee13531bd2ebeeb0eba"></script>
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=22b361d83f7cbee13531bd2ebeeb0eba">
+    document.querySelectorAll(".copy-account").forEach(function (button) {
+      button.addEventListener("click", async function () {
+        const account = button.dataset.account;
+        try {
+          await navigator.clipboard.writeText(account);
+          const original = button.textContent;
+          button.textContent = "복사됨";
+          setTimeout(function () {
+            button.textContent = original;
+          }, 1200);
+        } catch (e) {
+          alert(account);
+        }
+      });
+    });
+
+  </script>
   <script>
     (function () {
       const mapContainer = document.getElementById("kakao-map");
