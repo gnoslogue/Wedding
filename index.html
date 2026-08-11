@@ -1016,9 +1016,25 @@
   </script>
 
   <script>
-    const wedding = new Date("2026-10-31T10:30:00+09:00");
-    const now = new Date();
-    const diff = Math.ceil((wedding - now) / 86400000);
+    // D-day는 예식 시각이 아니라 한국 시간(KST) 자정 기준으로 계산합니다.
+    const kstParts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Seoul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(new Date());
+
+    const getPart = (type) =>
+      Number(kstParts.find((part) => part.type === type).value);
+
+    const todayKst = Date.UTC(
+      getPart("year"),
+      getPart("month") - 1,
+      getPart("day")
+    );
+
+    const weddingDay = Date.UTC(2026, 9, 31);
+    const diff = Math.round((weddingDay - todayKst) / 86400000);
     const dday = document.getElementById("dday");
 
     if (diff > 0) {
