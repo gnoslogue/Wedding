@@ -60,7 +60,8 @@
     }
 
     .hero {
-      min-height: 92svh;
+      height: calc(var(--initial-vh, 100svh) * 0.92);
+      min-height: 0;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -667,6 +668,11 @@
 
     body.modal-open {
       overflow: hidden;
+    }
+
+
+    .hero {
+      contain: paint;
     }
 
     @media (max-width: 360px) {
