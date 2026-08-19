@@ -736,9 +736,118 @@
       transform: scale(.96);
     }
 
+
+    .countdown-section {
+      margin-top: 36px;
+    }
+
+    .countdown-cards {
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      gap: 12px;
+      font-variant-numeric: tabular-nums;
+      flex-wrap: nowrap;
+    }
+
+    .count-card {
+      width: 64px;
+      min-width: 64px;
+      padding: 14px 6px 10px;
+      border: 1px solid #e6e0da;
+      border-radius: 8px;
+      background: #faf8f5;
+      box-shadow: 0 2px 8px rgba(55, 48, 42, .03);
+    }
+
+    .count-num {
+      color: #b98989;
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1;
+      letter-spacing: .02em;
+    }
+
+    .count-label {
+      margin-top: 9px;
+      color: #a89f97;
+      font-family: var(--serif);
+      font-size: 11px;
+      letter-spacing: .02em;
+    }
+
+    .count-colon {
+      align-self: center;
+      color: #c2b8af;
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .countdown-line {
+      margin-top: 26px;
+      color: #3d3834;
+      font-size: 16px;
+      line-height: 1.9;
+    }
+
+    .countdown-line + .countdown-line {
+      margin-top: 0;
+    }
+
+    .countdown-line .heart,
+    .countdown-line strong {
+      color: #cf8e8e;
+      font-weight: 600;
+    }
+
+
+    .countdown-section {
+      position: relative;
+    }
+
+    .countdown-cards {
+      transition: opacity .45s ease;
+    }
+
+    .countdown-finished-message {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #5f5851;
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.8;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .55s ease, visibility 0s linear .55s;
+    }
+
+    .countdown-section.finished .countdown-cards {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .countdown-section.finished .countdown-finished-message {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity .55s ease;
+    }
+
     @media (max-width: 360px) {
       section { padding-left: 22px; padding-right: 22px; }
       .hero-bottom h1 { font-size: 30px; }
+      .countdown-cards { gap: 8px; }
+      .count-card { width: 58px; min-width: 58px; padding: 12px 4px 9px; }
+      .count-num { font-size: 17px; }
+      .count-colon { font-size: 16px; }
+      .countdown-line { font-size: 15px; }
     }
   </style>
 </head>
@@ -806,7 +915,36 @@
         <div class="sun">25</div><div>26</div><div>27</div><div>28</div><div>29</div><div>30</div><div><span class="wedding-day">31</span></div>
       </div>
 
-      <div class="dday" id="dday"></div>
+      <div class="countdown-section" aria-label="결혼식 카운트다운">
+        <div class="countdown-cards" id="countdown-cards">
+          <div class="count-card">
+            <div class="count-num" id="count-days">00</div>
+            <div class="count-label">Days</div>
+          </div>
+          <div class="count-colon">:</div>
+          <div class="count-card">
+            <div class="count-num" id="count-hours">00</div>
+            <div class="count-label">Hour</div>
+          </div>
+          <div class="count-colon">:</div>
+          <div class="count-card">
+            <div class="count-num" id="count-minutes">00</div>
+            <div class="count-label">Min</div>
+          </div>
+          <div class="count-colon">:</div>
+          <div class="count-card">
+            <div class="count-num" id="count-seconds">00</div>
+            <div class="count-label">Sec</div>
+          </div>
+        </div>
+        <div class="countdown-finished-message" id="countdown-finished-message">
+          함께해 주셔서 감사합니다.
+        </div>
+
+        <div class="countdown-line" id="together-day-line">
+          민재 <span class="heart">♥</span> 은별 함께한 지 <strong>0</strong>일
+        </div>
+      </div>
     </section>
 
     <div class="divider"></div>
@@ -1120,34 +1258,70 @@
   </script>
 
   <script>
-    // D-day는 예식 시각이 아니라 한국 시간(KST) 자정 기준으로 계산합니다.
-    const kstParts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Seoul",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    }).formatToParts(new Date());
+        const weddingDate = new Date("2026-10-31T10:30:00+09:00");
+    const relationshipStartDate = new Date("2016-10-31T00:00:00+09:00");
 
-    const getPart = (type) =>
-      Number(kstParts.find((part) => part.type === type).value);
+    const countdownSection = document.querySelector(".countdown-section");
+    const countDays = document.getElementById("count-days");
+    const countHours = document.getElementById("count-hours");
+    const countMinutes = document.getElementById("count-minutes");
+    const countSeconds = document.getElementById("count-seconds");
+    const togetherDayLine = document.getElementById("together-day-line");
 
-    const todayKst = Date.UTC(
-      getPart("year"),
-      getPart("month") - 1,
-      getPart("day")
-    );
+    function getKstDateValue(date) {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(date);
 
-    const weddingDay = Date.UTC(2026, 9, 31);
-    const diff = Math.round((weddingDay - todayKst) / 86400000);
-    const dday = document.getElementById("dday");
+      const year = Number(parts.find((part) => part.type === "year").value);
+      const month = Number(parts.find((part) => part.type === "month").value);
+      const day = Number(parts.find((part) => part.type === "day").value);
 
-    if (diff > 0) {
-      dday.textContent = `민재와 은별의 결혼식이 ${diff}일 남았습니다.`;
-    } else if (diff === 0) {
-      dday.textContent = "오늘, 저희 결혼합니다.";
-    } else {
-      dday.textContent = "함께해 주셔서 감사합니다.";
+      return Date.UTC(year, month - 1, day);
     }
-  </script>
+
+    function updateCountdown() {
+      const now = new Date();
+      let remaining = weddingDate.getTime() - now.getTime();
+
+      if (remaining <= 0) {
+        if (countdownSection) countdownSection.classList.add("finished");
+        if (countDays) countDays.textContent = "00";
+        if (countHours) countHours.textContent = "00";
+        if (countMinutes) countMinutes.textContent = "00";
+        if (countSeconds) countSeconds.textContent = "00";
+      } else {
+        if (countdownSection) countdownSection.classList.remove("finished");
+      }
+
+      if (remaining < 0) remaining = 0;
+
+      const totalSeconds = Math.floor(remaining / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      if (countDays) countDays.textContent = String(days).padStart(2, "0");
+      if (countHours) countHours.textContent = String(hours).padStart(2, "0");
+      if (countMinutes) countMinutes.textContent = String(minutes).padStart(2, "0");
+      if (countSeconds) countSeconds.textContent = String(seconds).padStart(2, "0");
+
+      const todayKst = getKstDateValue(now);
+      const weddingDayKst = getKstDateValue(weddingDate);
+      const dday = Math.round((weddingDayKst - todayKst) / 86400000);
+
+      if (togetherDayLine) {
+        const togetherDays = Math.floor((todayKst - getKstDateValue(relationshipStartDate)) / 86400000) + 1;
+        togetherDayLine.innerHTML = `민재 <span class="heart">♥</span> 은별 함께한 지 <strong>${togetherDays}</strong>일`;
+      }
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+</script>
 </body>
 </html>
