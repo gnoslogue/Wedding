@@ -503,32 +503,6 @@
     }
 
 
-    .copy-toast {
-      position: fixed;
-      left: 50%;
-      bottom: calc(24px + env(safe-area-inset-bottom));
-      transform: translate(-50%, 12px);
-      z-index: 9999;
-      max-width: calc(100vw - 40px);
-      padding: 11px 16px;
-      border-radius: 999px;
-      background: rgba(55, 50, 46, .92);
-      color: #fff;
-      font-size: 13px;
-      line-height: 1.4;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .2s ease, transform .2s ease;
-      box-shadow: 0 8px 24px rgba(0,0,0,.14);
-    }
-
-    .copy-toast.show {
-      opacity: 1;
-      transform: translate(-50%, 0);
-    }
-
-
     .family-row + .family-row {
       margin-top: 6px;
     }
@@ -840,6 +814,51 @@
       transition: opacity .55s ease;
     }
 
+
+    .copy-icon-wrap {
+      position: relative;
+      width: 17px;
+      height: 17px;
+      flex: 0 0 17px;
+    }
+
+    .copy-icon-wrap .copy-icon {
+      position: absolute;
+      inset: 0;
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .copy-icon-wrap .icon-copy {
+      opacity: .72;
+      transform: scale(1);
+      visibility: visible;
+    }
+
+    .copy-icon-wrap .icon-check {
+      opacity: 0;
+      transform: scale(.75);
+      visibility: hidden;
+    }
+
+    .copy-account.copied .icon-copy {
+      opacity: 0;
+      transform: scale(.75);
+      visibility: hidden;
+    }
+
+    .copy-account.copied .icon-check {
+      opacity: 1;
+      transform: scale(1);
+      visibility: visible;
+    }
+
     @media (max-width: 360px) {
       section { padding-left: 22px; padding-right: 22px; }
       .hero-bottom h1 { font-size: 30px; }
@@ -1004,30 +1023,45 @@
               <span class="label">신랑 조민재</span>
               <button class="copy-account" type="button" data-account="국민은행 000000-00-000000" aria-label="국민은행 000000-00-000000 복사">
                 <span class="account-text">국민은행 000000-00-000000</span>
-                <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="9" y="9" width="10" height="10" rx="2"></rect>
-                  <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
-                </svg>
+                <span class="copy-icon-wrap" aria-hidden="true">
+                  <svg class="copy-icon icon-copy" viewBox="0 0 24 24">
+                    <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                    <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                  </svg>
+                  <svg class="copy-icon icon-check" viewBox="0 0 24 24">
+                    <path d="M5 12.5l4.2 4.2L19 7"></path>
+                  </svg>
+                </span>
               </button>
             </div>
             <div class="row">
               <span class="label">아버지</span>
               <button class="copy-account" type="button" data-account="신한은행 000-000-000000" aria-label="신한은행 000-000-000000 복사">
                 <span class="account-text">신한은행 000-000-000000</span>
-                <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="9" y="9" width="10" height="10" rx="2"></rect>
-                  <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
-                </svg>
+                <span class="copy-icon-wrap" aria-hidden="true">
+                  <svg class="copy-icon icon-copy" viewBox="0 0 24 24">
+                    <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                    <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                  </svg>
+                  <svg class="copy-icon icon-check" viewBox="0 0 24 24">
+                    <path d="M5 12.5l4.2 4.2L19 7"></path>
+                  </svg>
+                </span>
               </button>
             </div>
             <div class="row">
               <span class="label">어머니</span>
               <button class="copy-account" type="button" data-account="우리은행 0000-000-000000" aria-label="우리은행 0000-000-000000 복사">
                 <span class="account-text">우리은행 0000-000-000000</span>
-                <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="9" y="9" width="10" height="10" rx="2"></rect>
-                  <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
-                </svg>
+                <span class="copy-icon-wrap" aria-hidden="true">
+                  <svg class="copy-icon icon-copy" viewBox="0 0 24 24">
+                    <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                    <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                  </svg>
+                  <svg class="copy-icon icon-check" viewBox="0 0 24 24">
+                    <path d="M5 12.5l4.2 4.2L19 7"></path>
+                  </svg>
+                </span>
               </button>
             </div>
           </div>
@@ -1040,30 +1074,45 @@
               <span class="label">신부 김은별</span>
               <button class="copy-account" type="button" data-account="하나은행 000-000000-00000" aria-label="하나은행 000-000000-00000 복사">
                 <span class="account-text">하나은행 000-000000-00000</span>
-                <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="9" y="9" width="10" height="10" rx="2"></rect>
-                  <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
-                </svg>
+                <span class="copy-icon-wrap" aria-hidden="true">
+                  <svg class="copy-icon icon-copy" viewBox="0 0 24 24">
+                    <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                    <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                  </svg>
+                  <svg class="copy-icon icon-check" viewBox="0 0 24 24">
+                    <path d="M5 12.5l4.2 4.2L19 7"></path>
+                  </svg>
+                </span>
               </button>
             </div>
             <div class="row">
               <span class="label">아버지</span>
               <button class="copy-account" type="button" data-account="농협은행 000-0000-0000-00" aria-label="농협은행 000-0000-0000-00 복사">
                 <span class="account-text">농협은행 000-0000-0000-00</span>
-                <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="9" y="9" width="10" height="10" rx="2"></rect>
-                  <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
-                </svg>
+                <span class="copy-icon-wrap" aria-hidden="true">
+                  <svg class="copy-icon icon-copy" viewBox="0 0 24 24">
+                    <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                    <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                  </svg>
+                  <svg class="copy-icon icon-check" viewBox="0 0 24 24">
+                    <path d="M5 12.5l4.2 4.2L19 7"></path>
+                  </svg>
+                </span>
               </button>
             </div>
             <div class="row">
               <span class="label">어머니</span>
               <button class="copy-account" type="button" data-account="카카오뱅크 0000-00-0000000" aria-label="카카오뱅크 0000-00-0000000 복사">
                 <span class="account-text">카카오뱅크 0000-00-0000000</span>
-                <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="9" y="9" width="10" height="10" rx="2"></rect>
-                  <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
-                </svg>
+                <span class="copy-icon-wrap" aria-hidden="true">
+                  <svg class="copy-icon icon-copy" viewBox="0 0 24 24">
+                    <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                    <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                  </svg>
+                  <svg class="copy-icon icon-check" viewBox="0 0 24 24">
+                    <path d="M5 12.5l4.2 4.2L19 7"></path>
+                  </svg>
+                </span>
               </button>
             </div>
           </div>
@@ -1137,28 +1186,19 @@
     </div>
   </div>
 
-  <div class="copy-toast" id="copy-toast" role="status" aria-live="polite">복사되었습니다.</div>
-
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=22b361d83f7cbee13531bd2ebeeb0eba"></script>
 
   <script>
     (function () {
-      const copyToast = document.getElementById("copy-toast");
-      let copyToastTimer = null;
-
-      function showCopyToast(message) {
-        if (!copyToast) return;
-        copyToast.textContent = message;
-        copyToast.classList.add("show");
-        if (copyToastTimer) clearTimeout(copyToastTimer);
-        copyToastTimer = setTimeout(function () {
-          copyToast.classList.remove("show");
-        }, 1500);
+, 1500);
       }
 
       document.querySelectorAll(".copy-account").forEach(function (button) {
+        let copiedTimer;
+
         button.addEventListener("click", async function () {
           const account = button.dataset.account || "";
+
           try {
             if (navigator.clipboard && window.isSecureContext) {
               await navigator.clipboard.writeText(account);
@@ -1173,9 +1213,14 @@
               document.execCommand("copy");
               textarea.remove();
             }
-            showCopyToast("복사되었습니다.");
+
+            button.classList.add("copied");
+            clearTimeout(copiedTimer);
+            copiedTimer = setTimeout(function () {
+              button.classList.remove("copied");
+            }, 5000);
           } catch (e) {
-            showCopyToast("복사하지 못했습니다.");
+            button.classList.remove("copied");
           }
         });
       });
