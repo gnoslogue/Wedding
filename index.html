@@ -560,6 +560,60 @@
       line-height: 1.9;
     }
 
+
+    .verse-text,
+    .invitation-copy {
+      word-break: keep-all;
+      overflow-wrap: normal;
+      text-wrap: balance;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .verse-text {
+      max-width: 440px;
+    }
+
+    .invitation-copy {
+      max-width: 430px;
+    }
+
+    @media (max-width: 420px) {
+      .verse-text {
+        max-width: 320px;
+        font-size: 17px;
+        line-height: 1.85;
+      }
+
+      .invitation-copy {
+        max-width: 330px;
+      }
+    }
+
+
+    /* SECTION REVEAL - one time only */
+    .reveal-once {
+      opacity: 0;
+      transform: translateY(18px);
+      transition:
+        opacity .72s cubic-bezier(.39,.575,.565,1),
+        transform .72s cubic-bezier(.39,.575,.565,1);
+      will-change: opacity, transform;
+    }
+
+    .reveal-once.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal-once {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+    }
+
     /* GALLERY */
     .gallery {
       padding-top: 102px;
@@ -631,6 +685,7 @@
       height: 100%;
       overflow: hidden;
       background: #e8e5dc;
+      border-radius: 5px;
     }
 
     .gallery-item img {
@@ -661,6 +716,62 @@
         --portrait-w: 129px;
         --row-h: 172px;
       }
+    }
+
+
+    /* GALLERY LIGHTBOX */
+    .gallery-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+      background: rgba(20, 20, 18, .92);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .24s ease, visibility .24s ease;
+    }
+
+    .gallery-lightbox.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .gallery-lightbox-image {
+      display: block;
+      max-width: 100%;
+      max-height: calc(100svh - 52px);
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 5px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.22);
+      transform: scale(.985);
+      transition: transform .24s ease;
+    }
+
+    .gallery-lightbox.open .gallery-lightbox-image {
+      transform: scale(1);
+    }
+
+    .gallery-lightbox-close {
+      position: absolute;
+      top: max(14px, env(safe-area-inset-top));
+      right: 16px;
+      width: 40px;
+      height: 40px;
+      border: 0;
+      background: transparent;
+      color: rgba(255,255,255,.92);
+      font-size: 28px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .gallery-item img {
+      cursor: zoom-in;
     }
 
     /* ACCOUNT */
@@ -1502,6 +1613,11 @@
     </div>
   </div>
 
+  <div class="gallery-lightbox" id="gallery-lightbox" aria-hidden="true">
+    <button class="gallery-lightbox-close" id="gallery-lightbox-close" type="button" aria-label="사진 닫기">×</button>
+    <img class="gallery-lightbox-image" id="gallery-lightbox-image" alt="">
+  </div>
+
   <div class="copy-toast" id="copy-toast">복사했습니다.</div>
 
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=22b361d83f7cbee13531bd2ebeeb0eba"></script>
@@ -1690,6 +1806,7 @@
 
         const img = document.createElement("img");
         img.src = src;
+        img.draggable = false;
         img.alt = `민재와 은별의 웨딩 사진 ${String(index).padStart(2, "0")}`;
         img.loading = index <= 6 ? "eager" : "lazy";
         img.decoding = "async";
@@ -1726,6 +1843,25 @@
         let dragging = false;
         let startX = 0;
         let startScrollLeft = 0;
+
+        scroller.addEventListener("wheel", event => {
+          const canScrollHorizontally =
+            scroller.scrollWidth > scroller.clientWidth;
+
+          if (!canScrollHorizontally) return;
+
+          // 일반 마우스 휠의 세로 입력을 가로 스크롤로 변환.
+          // 터치패드의 실제 가로 제스처(deltaX)는 그대로 존중한다.
+          const delta =
+            Math.abs(event.deltaX) > Math.abs(event.deltaY)
+              ? event.deltaX
+              : event.deltaY;
+
+          if (delta === 0) return;
+
+          scroller.scrollLeft += delta;
+          event.preventDefault();
+        }, { passive: false });
 
         scroller.addEventListener("pointerdown", event => {
           if (event.pointerType === "touch") return;
@@ -1764,6 +1900,107 @@
         });
 
       });
+    })();
+
+    // 갤러리 사진 확대 보기
+    (function () {
+      const scroller = document.getElementById("gallery-scroll");
+      const lightbox = document.getElementById("gallery-lightbox");
+      const lightboxImage = document.getElementById("gallery-lightbox-image");
+      const closeButton = document.getElementById("gallery-lightbox-close");
+
+      if (!scroller || !lightbox || !lightboxImage || !closeButton) return;
+
+      let pointerStartX = 0;
+      let pointerStartY = 0;
+      let moved = false;
+      let lightboxScrollY = 0;
+
+      scroller.addEventListener("pointerdown", event => {
+        pointerStartX = event.clientX;
+        pointerStartY = event.clientY;
+        moved = false;
+      });
+
+      scroller.addEventListener("pointermove", event => {
+        if (
+          Math.abs(event.clientX - pointerStartX) > 8 ||
+          Math.abs(event.clientY - pointerStartY) > 8
+        ) {
+          moved = true;
+        }
+      });
+
+      function openLightbox(img) {
+        lightboxScrollY = window.scrollY || window.pageYOffset || 0;
+        document.body.style.top = `-${lightboxScrollY}px`;
+        document.body.classList.add("modal-open");
+
+        lightboxImage.src = img.currentSrc || img.src;
+        lightboxImage.alt = img.alt || "웨딩 사진";
+        lightbox.classList.add("open");
+        lightbox.setAttribute("aria-hidden", "false");
+      }
+
+      function closeLightbox() {
+        if (!lightbox.classList.contains("open")) return;
+
+        lightbox.classList.remove("open");
+        lightbox.setAttribute("aria-hidden", "true");
+        lightboxImage.removeAttribute("src");
+
+        document.body.classList.remove("modal-open");
+        document.body.style.top = "";
+        window.scrollTo(0, lightboxScrollY);
+      }
+
+      scroller.addEventListener("click", event => {
+        const img = event.target.closest(".gallery-item img");
+        if (!img || moved) return;
+        openLightbox(img);
+      });
+
+      closeButton.addEventListener("click", closeLightbox);
+
+      lightbox.addEventListener("click", event => {
+        if (event.target === lightbox) closeLightbox();
+      });
+
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape") closeLightbox();
+      });
+    })();
+
+    // 섹션이 처음 화면에 들어올 때만 한 번 페이드인
+    (function () {
+      const sections = Array.from(document.querySelectorAll("main > section"));
+
+      if (!sections.length) return;
+
+      const prefersReducedMotion =
+        window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      sections.forEach(section => section.classList.add("reveal-once"));
+
+      if (prefersReducedMotion || !("IntersectionObserver" in window)) {
+        sections.forEach(section => section.classList.add("is-visible"));
+        return;
+      }
+
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+
+          entry.target.classList.add("is-visible");
+          obs.unobserve(entry.target);
+        });
+      }, {
+        threshold: 0.45,
+        rootMargin: "0px 0px -8% 0px"
+      });
+
+      sections.forEach(section => observer.observe(section));
     })();
 
     // 계좌 아코디언: 열기 / 닫기 모두 부드럽게
