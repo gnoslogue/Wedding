@@ -567,24 +567,62 @@
       padding-right: 20px;
     }
 
-    .gallery .section-title { margin-bottom: 44px; }
+    .gallery .section-title { margin-bottom: 34px; }
 
-    .gallery-grid {
+    .gallery-scroll {
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      overscroll-behavior-x: contain;
+      padding-bottom: 4px;
+      margin-right: -20px;
+      padding-right: 20px;
+      scroll-snap-type: x proximity;
+    }
+
+    .gallery-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .gallery-rail {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-auto-flow: column;
+      grid-template-rows: repeat(2, 184px);
+      grid-auto-columns: max-content;
       gap: 8px;
-      align-items: start;
+      align-items: stretch;
+      align-content: start;
+      width: max-content;
+      min-width: 100%;
     }
 
     .gallery-item-wrap {
       min-width: 0;
+      height: 184px;
+      scroll-snap-align: start;
+    }
+
+    /* 대부분 세로사진인 웨딩 갤러리 기준:
+       세로/정방형은 2행을 차곡차곡 채우고,
+       드문 가로사진만 두 행을 통째로 사용한다. */
+    .gallery-item-wrap.portrait {
+      width: 138px;
+    }
+
+    .gallery-item-wrap.square {
+      width: 168px;
     }
 
     .gallery-item-wrap.landscape {
-      grid-column: 1 / -1;
+      grid-row: span 2;
+      width: 270px;
+      height: 376px;
     }
 
     .gallery-item {
+      width: 100%;
+      height: 100%;
       overflow: hidden;
       background: #e8e5dc;
     }
@@ -596,78 +634,19 @@
       object-fit: cover;
     }
 
-    .gallery-item-wrap.landscape .gallery-item {
-      aspect-ratio: var(--gallery-ratio, 1.5);
-    }
-
-    .gallery-item-wrap.portrait .gallery-item {
-      aspect-ratio: var(--gallery-ratio, .75);
-    }
-
-    .gallery-item-wrap.square .gallery-item {
-      aspect-ratio: var(--gallery-ratio, 1);
-    }
-
-    .gallery-item-wrap.offset-small { margin-top: 18px; }
-    .gallery-item-wrap.offset-medium { margin-top: 34px; }
-    .gallery-item-wrap.offset-large { margin-top: 56px; }
-
     .gallery-index {
-      margin: 12px 2px 0;
+      margin: 10px 2px 0;
       color: var(--muted);
       font-size: 9px;
       letter-spacing: .15em;
       text-align: left;
     }
 
-    .gallery-extra {
-      height: 0;
-      overflow: hidden;
-      opacity: 0;
-      transition:
-        height .58s cubic-bezier(.22,.75,.25,1),
-        opacity .36s ease;
-    }
-
-    .gallery-extra.open {
-      opacity: 1;
-    }
-
-    .gallery-extra .gallery-grid {
-      padding-top: 8px;
-    }
-
-    .gallery-more-wrap {
-      display: none;
-      justify-content: center;
-      margin-top: 34px;
-    }
-
-    .gallery-more-wrap.visible {
-      display: flex;
-    }
-
-    .gallery-more {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 0;
-      border: 0;
-      background: transparent;
-      color: #5d6158;
-      font-family: var(--sans);
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .gallery-more-icon {
-      display: inline-block;
-      font-size: 12px;
-      transition: transform .36s cubic-bezier(.22,.75,.25,1);
-    }
-
-    .gallery-more[aria-expanded="true"] .gallery-more-icon {
-      transform: rotate(180deg);
+    .gallery-hint {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
     }
 
     .gallery-empty {
@@ -676,6 +655,24 @@
       font-family: var(--sans);
       font-size: 12px;
       text-align: center;
+    }
+
+    @media (max-width: 380px) {
+      .gallery-rail {
+        grid-template-rows: repeat(2, 172px);
+      }
+
+      .gallery-item-wrap {
+        height: 172px;
+      }
+
+      .gallery-item-wrap.portrait { width: 129px; }
+      .gallery-item-wrap.square { width: 156px; }
+
+      .gallery-item-wrap.landscape {
+        width: 252px;
+        height: 352px;
+      }
     }
 
     /* ACCOUNT */
@@ -1210,19 +1207,11 @@
       <p class="eyebrow">Gallery</p>
       <h2 class="section-title">우리의 순간</h2>
 
-      <div class="gallery-grid" id="gallery-preview"></div>
-
-      <div class="gallery-extra" id="gallery-extra" aria-hidden="true">
-        <div class="gallery-grid" id="gallery-extra-grid"></div>
+      <div class="gallery-scroll" id="gallery-scroll">
+        <div class="gallery-rail" id="gallery-rail"></div>
       </div>
 
-      <div class="gallery-more-wrap" id="gallery-more-wrap">
-        <button class="gallery-more" id="gallery-more" type="button" aria-expanded="false">
-          <span class="gallery-more-label">사진 더보기</span>
-          <span class="gallery-more-icon" aria-hidden="true">↓</span>
-        </button>
-      </div>
-
+      <p class="gallery-hint" id="gallery-hint">좌우로 넘겨보세요</p>
       <p class="gallery-empty" id="gallery-empty">
         갤러리 사진을 준비 중입니다.
       </p>
@@ -1656,20 +1645,15 @@
 
     // 갤러리: ./images/gallery/01.jpg, 02.jpg ... 순서대로 자동 탐색
     (function () {
-      const PREVIEW_COUNT = 6;
       const MAX_SCAN = 60;
       const GALLERY_DIR = "./images/gallery";
       const EXT = "jpg";
 
-      const preview = document.getElementById("gallery-preview");
-      const extra = document.getElementById("gallery-extra");
-      const extraGrid = document.getElementById("gallery-extra-grid");
-      const moreWrap = document.getElementById("gallery-more-wrap");
-      const moreButton = document.getElementById("gallery-more");
-      const moreLabel = moreButton?.querySelector(".gallery-more-label");
+      const rail = document.getElementById("gallery-rail");
       const emptyMessage = document.getElementById("gallery-empty");
+      const hint = document.getElementById("gallery-hint");
 
-      if (!preview || !extra || !extraGrid || !moreWrap || !moreButton) return;
+      if (!rail || !emptyMessage) return;
 
       function probeImage(src) {
         return new Promise(resolve => {
@@ -1691,44 +1675,28 @@
       function classifyImage(width, height) {
         const ratio = width / height;
 
-        if (ratio > 1.25) return "landscape";
-        if (ratio < 0.8) return "portrait";
+        if (ratio > 1.18) return "landscape";
+        if (ratio < 0.82) return "portrait";
         return "square";
       }
 
-      function offsetFor(index, orientation) {
-        // 방향은 실제 사진에서 결정하고, 작은 세로 리듬만 반복해서 부여한다.
-        if (orientation === "landscape") {
-          return index % 2 === 0 ? "offset-small" : "";
-        }
+      function normalizedRatio(width, height, orientation) {
+        const ratio = width / height;
 
-        const pattern = ["", "offset-large", "offset-small", "offset-medium"];
-        return pattern[(index - 1) % pattern.length];
+        if (orientation === "landscape") {
+          return Math.min(Math.max(ratio, 1.18), 1.65);
+        }
+        if (orientation === "portrait") {
+          return Math.min(Math.max(ratio, 0.66), 0.82);
+        }
+        return Math.min(Math.max(ratio, 0.9), 1.08);
       }
 
       function makeItem(imageInfo, index) {
         const { src, width, height } = imageInfo;
         const orientation = classifyImage(width, height);
-        const offset = offsetFor(index, orientation);
-        const ratio = width / height;
-
         const wrap = document.createElement("div");
-        wrap.className = ["gallery-item-wrap", orientation, offset]
-          .filter(Boolean)
-          .join(" ");
-
-        // 원본 방향과 비율을 최대한 살리되, 너무 극단적인 프레임은 제한한다.
-        let displayRatio = ratio;
-
-        if (orientation === "landscape") {
-          displayRatio = Math.min(Math.max(ratio, 1.28), 1.9);
-        } else if (orientation === "portrait") {
-          displayRatio = Math.min(Math.max(ratio, 0.58), 0.79);
-        } else {
-          displayRatio = Math.min(Math.max(ratio, 0.82), 1.22);
-        }
-
-        wrap.style.setProperty("--gallery-ratio", String(displayRatio));
+        wrap.className = ["gallery-item-wrap", orientation].join(" ");
 
         const frame = document.createElement("div");
         frame.className = "gallery-item";
@@ -1736,18 +1704,16 @@
         const img = document.createElement("img");
         img.src = src;
         img.alt = `민재와 은별의 웨딩 사진 ${String(index).padStart(2, "0")}`;
-        img.loading = index <= PREVIEW_COUNT ? "eager" : "lazy";
+        img.loading = index <= 6 ? "eager" : "lazy";
         img.decoding = "async";
 
         frame.appendChild(img);
         wrap.appendChild(frame);
 
-        if (orientation !== "landscape") {
-          const number = document.createElement("div");
-          number.className = "gallery-index";
-          number.textContent = String(index).padStart(2, "0");
-          wrap.appendChild(number);
-        }
+        const number = document.createElement("div");
+        number.className = "gallery-index";
+        number.textContent = String(index).padStart(2, "0");
+        wrap.appendChild(number);
 
         return wrap;
       }
@@ -1755,7 +1721,6 @@
       async function discoverImages() {
         const images = [];
 
-        // 번호가 하나라도 비면 그 지점에서 종료.
         for (let i = 1; i <= MAX_SCAN; i++) {
           const file = String(i).padStart(2, "0");
           const src = `${GALLERY_DIR}/${file}.${EXT}`;
@@ -1768,63 +1733,19 @@
         return images;
       }
 
-      function setExtraHeight(open) {
-        if (open) {
-          extra.classList.add("open");
-          extra.setAttribute("aria-hidden", "false");
-
-          requestAnimationFrame(() => {
-            extra.style.height = `${extra.scrollHeight}px`;
-          });
-
-          const onEnd = event => {
-            if (event.propertyName !== "height") return;
-            extra.style.height = "auto";
-            extra.removeEventListener("transitionend", onEnd);
-          };
-          extra.addEventListener("transitionend", onEnd);
-        } else {
-          extra.style.height = `${extra.scrollHeight}px`;
-          extra.offsetHeight;
-          extra.style.height = "0px";
-          extra.classList.remove("open");
-          extra.setAttribute("aria-hidden", "true");
-        }
-      }
-
       discoverImages().then(images => {
         if (!images.length) {
           emptyMessage.style.display = "block";
+          if (hint) hint.style.display = "none";
           return;
         }
 
         images.forEach((imageInfo, idx) => {
-          const index = idx + 1;
-          const item = makeItem(imageInfo, index);
-
-          if (index <= PREVIEW_COUNT) preview.appendChild(item);
-          else extraGrid.appendChild(item);
+          rail.appendChild(makeItem(imageInfo, idx + 1));
         });
 
-        if (images.length > PREVIEW_COUNT) {
-          moreWrap.classList.add("visible");
-        }
-      });
-
-      moreButton.addEventListener("click", () => {
-        const isOpen = moreButton.getAttribute("aria-expanded") === "true";
-        moreButton.setAttribute("aria-expanded", String(!isOpen));
-
-        if (moreLabel) {
-          moreLabel.textContent = isOpen ? "사진 더보기" : "접기";
-        }
-
-        setExtraHeight(!isOpen);
-      });
-
-      window.addEventListener("resize", () => {
-        if (moreButton.getAttribute("aria-expanded") === "true") {
-          extra.style.height = "auto";
+        if (images.length <= 3 && hint) {
+          hint.style.display = "none";
         }
       });
     })();
