@@ -570,15 +570,23 @@
     .gallery .section-title { margin-bottom: 34px; }
 
     .gallery-scroll {
+      width: calc(100% + 20px);
+      max-width: none;
       overflow-x: auto;
       overflow-y: hidden;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
       overscroll-behavior-x: contain;
-      padding-bottom: 4px;
-      margin-right: -20px;
-      padding-right: 20px;
+      padding: 0 20px 4px 0;
+      cursor: grab;
       scroll-snap-type: x proximity;
+      touch-action: pan-x pan-y;
+    }
+
+    .gallery-scroll.dragging {
+      cursor: grabbing;
+      scroll-snap-type: none;
+      user-select: none;
     }
 
     .gallery-scroll::-webkit-scrollbar {
@@ -586,38 +594,36 @@
     }
 
     .gallery-rail {
+      --portrait-w: 138px;
+      --row-h: 184px;
+      --gap: 8px;
+
       display: grid;
-      grid-auto-flow: column;
-      grid-template-rows: repeat(2, 184px);
-      grid-auto-columns: max-content;
-      gap: 8px;
+      grid-auto-flow: column dense;
+      grid-template-rows: repeat(2, var(--row-h));
+      grid-auto-columns: var(--portrait-w);
+      gap: var(--gap);
       align-items: stretch;
-      align-content: start;
       width: max-content;
-      min-width: 100%;
+      min-width: calc(100vw - 60px);
     }
 
     .gallery-item-wrap {
       min-width: 0;
-      height: 184px;
+      height: var(--row-h);
       scroll-snap-align: start;
     }
 
-    /* 대부분 세로사진인 웨딩 갤러리 기준:
-       세로/정방형은 2행을 차곡차곡 채우고,
-       드문 가로사진만 두 행을 통째로 사용한다. */
-    .gallery-item-wrap.portrait {
-      width: 138px;
-    }
-
+    .gallery-item-wrap.portrait,
     .gallery-item-wrap.square {
-      width: 168px;
+      width: var(--portrait-w);
     }
 
+    /* 가로사진은 위 한 행에서 세로사진 두 장 폭을 차지.
+       바로 아래 행에는 세로사진 두 장이 채워질 수 있다. */
     .gallery-item-wrap.landscape {
-      grid-row: span 2;
-      width: 270px;
-      height: 376px;
+      grid-column: span 2;
+      width: calc(var(--portrait-w) * 2 + var(--gap));
     }
 
     .gallery-item {
@@ -642,13 +648,6 @@
       text-align: left;
     }
 
-    .gallery-hint {
-      margin-top: 18px;
-      color: var(--muted);
-      font-size: 11px;
-      text-align: center;
-    }
-
     .gallery-empty {
       display: none;
       color: var(--muted);
@@ -659,19 +658,8 @@
 
     @media (max-width: 380px) {
       .gallery-rail {
-        grid-template-rows: repeat(2, 172px);
-      }
-
-      .gallery-item-wrap {
-        height: 172px;
-      }
-
-      .gallery-item-wrap.portrait { width: 129px; }
-      .gallery-item-wrap.square { width: 156px; }
-
-      .gallery-item-wrap.landscape {
-        width: 252px;
-        height: 352px;
+        --portrait-w: 129px;
+        --row-h: 172px;
       }
     }
 
@@ -1091,6 +1079,7 @@
 
       <button class="text-action contact-trigger" id="contact-open" type="button">
         <span>연락하기</span>
+        <span class="arrow" aria-hidden="true">→</span>
       </button>
     </section>
 
@@ -1211,7 +1200,6 @@
         <div class="gallery-rail" id="gallery-rail"></div>
       </div>
 
-      <p class="gallery-hint" id="gallery-hint">좌우로 넘겨보세요</p>
       <p class="gallery-empty" id="gallery-empty">
         갤러리 사진을 준비 중입니다.
       </p>
@@ -1651,7 +1639,6 @@
 
       const rail = document.getElementById("gallery-rail");
       const emptyMessage = document.getElementById("gallery-empty");
-      const hint = document.getElementById("gallery-hint");
 
       if (!rail || !emptyMessage) return;
 
@@ -1733,10 +1720,42 @@
         return images;
       }
 
+      // PC에서도 마우스로 잡아 끌 수 있게 한다.
+      const scroller = document.getElementById("gallery-scroll");
+      if (scroller) {
+        let dragging = false;
+        let startX = 0;
+        let startScrollLeft = 0;
+
+        scroller.addEventListener("pointerdown", event => {
+          if (event.pointerType === "touch") return;
+
+          dragging = true;
+          startX = event.clientX;
+          startScrollLeft = scroller.scrollLeft;
+          scroller.classList.add("dragging");
+          scroller.setPointerCapture?.(event.pointerId);
+        });
+
+        scroller.addEventListener("pointermove", event => {
+          if (!dragging) return;
+          scroller.scrollLeft = startScrollLeft - (event.clientX - startX);
+        });
+
+        const endDrag = event => {
+          if (!dragging) return;
+          dragging = false;
+          scroller.classList.remove("dragging");
+          scroller.releasePointerCapture?.(event.pointerId);
+        };
+
+        scroller.addEventListener("pointerup", endDrag);
+        scroller.addEventListener("pointercancel", endDrag);
+      }
+
       discoverImages().then(images => {
         if (!images.length) {
           emptyMessage.style.display = "block";
-          if (hint) hint.style.display = "none";
           return;
         }
 
@@ -1744,9 +1763,6 @@
           rail.appendChild(makeItem(imageInfo, idx + 1));
         });
 
-        if (images.length <= 3 && hint) {
-          hint.style.display = "none";
-        }
       });
     })();
 
