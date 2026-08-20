@@ -73,6 +73,10 @@
       right: 0;
     }
 
+    body.gallery-lightbox-open {
+      overflow: hidden;
+    }
+
     button, a { -webkit-tap-highlight-color: transparent; }
 
     .page {
@@ -1918,7 +1922,6 @@
       let pointerStartX = 0;
       let pointerStartY = 0;
       let moved = false;
-      let lightboxScrollY = 0;
 
       scroller.addEventListener("pointerdown", event => {
         pointerStartX = event.clientX;
@@ -1936,9 +1939,7 @@
       });
 
       function openLightbox(img) {
-        lightboxScrollY = window.scrollY || window.pageYOffset || 0;
-        document.body.style.top = `-${lightboxScrollY}px`;
-        document.body.classList.add("modal-open");
+        document.body.classList.add("gallery-lightbox-open");
 
         lightboxImage.src = img.currentSrc || img.src;
         lightboxImage.alt = img.alt || "웨딩 사진";
@@ -1953,9 +1954,7 @@
         lightbox.setAttribute("aria-hidden", "true");
         lightboxImage.removeAttribute("src");
 
-        document.body.classList.remove("modal-open");
-        document.body.style.top = "";
-        window.scrollTo(0, lightboxScrollY);
+        document.body.classList.remove("gallery-lightbox-open");
       }
 
       scroller.addEventListener("click", event => {
