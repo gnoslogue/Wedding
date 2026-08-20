@@ -65,7 +65,13 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    body.modal-open { overflow: hidden; }
+    body.modal-open {
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      left: 0;
+      right: 0;
+    }
 
     button, a { -webkit-tap-highlight-color: transparent; }
 
@@ -1554,16 +1560,26 @@
       const tabs = modal.querySelectorAll("[data-contact-tab]");
       const panels = modal.querySelectorAll("[data-contact-panel]");
 
+      let lockedScrollY = 0;
+
       function openModal() {
+        lockedScrollY = window.scrollY || window.pageYOffset || 0;
+
+        document.body.style.top = `-${lockedScrollY}px`;
+        document.body.classList.add("modal-open");
+
         modal.classList.add("open");
         modal.setAttribute("aria-hidden", "false");
-        document.body.classList.add("modal-open");
       }
 
       function closeModal() {
         modal.classList.remove("open");
         modal.setAttribute("aria-hidden", "true");
+
         document.body.classList.remove("modal-open");
+        document.body.style.top = "";
+
+        window.scrollTo(0, lockedScrollY);
       }
 
       openers.forEach(el => el.addEventListener("click", openModal));
