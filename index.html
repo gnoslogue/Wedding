@@ -67,10 +67,6 @@
 
     body.modal-open {
       overflow: hidden;
-      position: fixed;
-      width: 100%;
-      left: 0;
-      right: 0;
     }
 
     body.gallery-lightbox-open {
@@ -1730,9 +1726,22 @@
         level: 4
       });
 
+      const markerImageSrc = "./images/map-marker.png";
+      const markerImageSize = new kakao.maps.Size(34, 46);
+      const markerImageOption = {
+        offset: new kakao.maps.Point(17, 46)
+      };
+
+      const markerImage = new kakao.maps.MarkerImage(
+        markerImageSrc,
+        markerImageSize,
+        markerImageOption
+      );
+
       new kakao.maps.Marker({
         map,
-        position
+        position,
+        image: markerImage
       });
     })();
 
@@ -1792,12 +1801,7 @@
       const tabs = modal.querySelectorAll("[data-contact-tab]");
       const panels = modal.querySelectorAll("[data-contact-panel]");
 
-      let lockedScrollY = 0;
-
       function openModal() {
-        lockedScrollY = window.scrollY || window.pageYOffset || 0;
-
-        document.body.style.top = `-${lockedScrollY}px`;
         document.body.classList.add("modal-open");
 
         modal.classList.add("open");
@@ -1809,9 +1813,6 @@
         modal.setAttribute("aria-hidden", "true");
 
         document.body.classList.remove("modal-open");
-        document.body.style.top = "";
-
-        window.scrollTo(0, lockedScrollY);
       }
 
       openers.forEach(el => el.addEventListener("click", openModal));
