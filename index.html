@@ -1410,7 +1410,7 @@
           <summary>신랑측</summary>
 
           <div class="account-content">
-            <div class="account-person">
+            <div class="account-person" data-person="groom">
               <div class="account-role">신랑</div>
               <div class="account-name">조민재</div>
               <div class="account-bottom">
@@ -1428,7 +1428,7 @@
               </div>
             </div>
 
-            <div class="account-person">
+            <div class="account-person" data-person="groomFather">
               <div class="account-role">아버지</div>
               <div class="account-name">조상철</div>
               <div class="account-bottom">
@@ -1446,7 +1446,7 @@
               </div>
             </div>
 
-            <div class="account-person">
+            <div class="account-person" data-person="groomMother">
               <div class="account-role">어머니</div>
               <div class="account-name">박현옥</div>
               <div class="account-bottom">
@@ -1470,7 +1470,7 @@
           <summary>신부측</summary>
 
           <div class="account-content">
-            <div class="account-person">
+            <div class="account-person" data-person="bride">
               <div class="account-role">신부</div>
               <div class="account-name">김은별</div>
               <div class="account-bottom">
@@ -1488,7 +1488,7 @@
               </div>
             </div>
 
-            <div class="account-person">
+            <div class="account-person" data-person="brideFather">
               <div class="account-role">아버지</div>
               <div class="account-name">김용범</div>
               <div class="account-bottom">
@@ -1506,7 +1506,7 @@
               </div>
             </div>
 
-            <div class="account-person">
+            <div class="account-person" data-person="brideMother">
               <div class="account-role">어머니</div>
               <div class="account-name">김보영</div>
               <div class="account-bottom">
@@ -1538,7 +1538,7 @@
       <button class="contact-close" type="button" aria-label="닫기" data-close-contact>×</button>
 
       <div class="contact-grid">
-        <div class="contact-card">
+        <div class="contact-card" data-person="groom">
           <span class="contact-role">신랑</span>
           <span class="contact-name">조민재</span>
           <div class="contact-actions">
@@ -1555,7 +1555,7 @@
             </a>
           </div>
         </div>
-        <div class="contact-card">
+        <div class="contact-card" data-person="bride">
           <span class="contact-role">신부</span>
           <span class="contact-name">김은별</span>
           <div class="contact-actions">
@@ -1572,7 +1572,7 @@
             </a>
           </div>
         </div>
-        <div class="contact-card">
+        <div class="contact-card" data-person="groomFather">
           <span class="contact-role">신랑 아버지</span>
           <span class="contact-name">조상철</span>
           <div class="contact-actions">
@@ -1589,7 +1589,7 @@
             </a>
           </div>
         </div>
-        <div class="contact-card">
+        <div class="contact-card" data-person="brideFather">
           <span class="contact-role">신부 아버지</span>
           <span class="contact-name">김용범</span>
           <div class="contact-actions">
@@ -1606,7 +1606,7 @@
             </a>
           </div>
         </div>
-        <div class="contact-card">
+        <div class="contact-card" data-person="groomMother">
           <span class="contact-role">신랑 어머니</span>
           <span class="contact-name">박현옥</span>
           <div class="contact-actions">
@@ -1623,7 +1623,7 @@
             </a>
           </div>
         </div>
-        <div class="contact-card">
+        <div class="contact-card" data-person="brideMother">
           <span class="contact-role">신부 어머니</span>
           <span class="contact-name">김보영</span>
           <div class="contact-actions">
@@ -1730,7 +1730,61 @@
     })();
 
     // 연락 모달
-    (function () {
+        // 연락처 / 계좌 데이터: ./data.json
+    (async function () {
+      try {
+        const response = await fetch("./data.json", { cache: "no-store" });
+        if (!response.ok) throw new Error(`data.json HTTP ${response.status}`);
+
+        const people = await response.json();
+
+        document.querySelectorAll(".contact-card[data-person]").forEach(card => {
+          const key = card.dataset.person;
+          const person = people[key];
+          if (!person) return;
+
+          const name = card.querySelector(".contact-name");
+          const call = card.querySelector('a[href^="tel:"]');
+          const sms = card.querySelector('a[href^="sms:"]');
+          const phone = String(person.phone || "");
+          const dial = phone.replace(/[^0-9+]/g, "");
+
+          if (name && person.name) name.textContent = person.name;
+
+          if (call && dial) {
+            call.href = `tel:${dial}`;
+            call.setAttribute("aria-label", `${person.name}에게 전화하기`);
+          }
+
+          if (sms && dial) {
+            sms.href = `sms:${dial}`;
+            sms.setAttribute("aria-label", `${person.name}에게 문자 보내기`);
+          }
+        });
+
+        document.querySelectorAll(".account-person[data-person]").forEach(row => {
+          const key = row.dataset.person;
+          const person = people[key];
+          if (!person) return;
+
+          const name = row.querySelector(".account-name");
+          const number = row.querySelector(".account-number");
+          const copy = row.querySelector(".copy-account");
+
+          if (name && person.name) name.textContent = person.name;
+
+          if (person.bank) {
+            const bankText = `${person.bank.name} ${person.bank.account}`.trim();
+            if (number) number.textContent = bankText;
+            if (copy) copy.dataset.copyValue = bankText;
+          }
+        });
+      } catch (error) {
+        console.error("data.json을 불러오지 못했습니다.", error);
+      }
+    })();
+
+(function () {
       const modal = document.getElementById("contact-modal");
       const openers = [
         document.getElementById("contact-open"),
