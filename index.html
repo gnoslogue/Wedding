@@ -642,6 +642,19 @@
       line-height: 1.9;
     }
 
+    .transport-subtitle {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .transport-note {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
 
     .verse-text,
     .invitation-copy {
@@ -1367,16 +1380,53 @@
         <div class="transport-item">
           <div class="transport-title">Subway</div>
           <p class="transport-copy">
-            4호선 고잔역 2번 출구 → 셔틀버스 이용<br />
-            4호선 중앙역 1번 출구 → 10번 버스 → 안산문화숲의광장 하차
+            <span class="transport-subtitle">4호선 고잔역 2번 출구</span>
+            2번 출구에서 도보 20분 또는 AW컨벤션 셔틀버스 이용<br />
+            <span class="transport-note">※ 셔틀버스는 5~7분 간격으로 수시 운행</span>
           </p>
         </div>
 
         <div class="transport-item">
           <div class="transport-title">Bus</div>
           <p class="transport-copy">
-            문화숲의 광장 정류장 · 88번<br />
-            동남레이크빌 정류장 · 99-1번, 3100번
+            <strong>안산문화숲의광장 하차</strong><br />
+            · 88번<br /><br />
+            <strong>동남레이크빌 하차</strong><br />
+            · 99-1번 · 3100번<br /><br />
+            <strong>대림호수공원아파트 하차</strong><br />
+            · 3번 · 77번 · 98번
+          </p>
+        </div>
+
+        <div class="transport-item">
+          <div class="transport-title">Car</div>
+          <p class="transport-copy">
+            내비게이션에 <strong>AW컨벤션</strong> 또는 아래 주소를 검색<br />
+            <strong>경기도 안산시 단원구 광덕1로 171</strong><br /><br />
+            <strong>서울 방면</strong><br />
+            안산JC → 안산IC → 법원·검찰청 → AW컨벤션<br /><br />
+            <strong>수원 방면</strong><br />
+            수인산업도로 → 법원·검찰청 → AW컨벤션<br /><br />
+            <strong>인천 방면</strong><br />
+            서안산IC → 법원·검찰청 → AW컨벤션<br /><br />
+            <strong>영동고속도로 이용 시</strong><br />
+            안산IC → 법원·검찰청 → AW컨벤션<br /><br />
+            <strong>서해안고속도로 이용 시</strong><br />
+            매송IC → 해안로(호수공원) → 시청 방면 → AW컨벤션
+          </p>
+        </div>
+
+        <div class="transport-item">
+          <div class="transport-title">Parking</div>
+          <p class="transport-copy">
+            <strong>제1주차장</strong><br />
+            AW컨벤션 지하 1층 · 지하 2층<br /><br />
+            <strong>제2주차장</strong><br />
+            양지주차타워 (AW컨벤션주차타워)<br /><br />
+            <strong>제3주차장</strong><br />
+            AW컨벤션 정문 맞은편 공영주차장<br /><br />
+            <strong>제4주차장</strong><br />
+            MK주차타워
           </p>
         </div>
       </div>
@@ -2082,8 +2132,8 @@
           obs.unobserve(entry.target);
         });
       }, {
-        threshold: 0.45,
-        rootMargin: "0px 0px -8% 0px"
+        threshold: 0,
+        rootMargin: "0px 0px -45% 0px"
       });
 
       sections.forEach(section => observer.observe(section));
