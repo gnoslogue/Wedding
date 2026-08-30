@@ -329,7 +329,7 @@
 
     .family-lines strong {
       color: var(--text);
-      font-weight: 500;
+      font-weight: 600;
       text-align: left;
     }
 
@@ -365,16 +365,18 @@
     .calendar-month {
       margin: 28px 0 8px;
       font-family: var(--serif);
-      font-size: 24px;
+      font-size: 28px;
       font-weight: 400;
-      letter-spacing: .06em;
+      letter-spacing: .08em;
+      line-height: 1.15;
     }
 
     .calendar-sub {
       margin-bottom: 30px;
       color: var(--sub);
-      font-size: 13px;
-      letter-spacing: .03em;
+      font-size: 12px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
     }
 
     .calendar-grid {
@@ -423,9 +425,24 @@
 
     /* COUNTDOWN */
     .calendar-countdown {
-      margin-top: 52px;
-      min-height: 118px;
+      margin-top: 48px;
+      min-height: 132px;
+      padding: 18px 0 14px;
       position: relative;
+    }
+
+    .calendar-countdown::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: -28px;
+      right: -28px;
+      background: rgba(255, 255, 255, 0.34);
+      border-top: 1px solid rgba(111, 121, 97, 0.08);
+      border-bottom: 1px solid rgba(111, 121, 97, 0.07);
+      z-index: 0;
+      pointer-events: none;
     }
 
     .countdown-cards {
@@ -435,6 +452,8 @@
       justify-content: center;
       gap: 8px;
       margin: 0 auto;
+      position: relative;
+      z-index: 1;
     }
 
     .count-card {
@@ -485,7 +504,7 @@
     .countdown-line .together-name,
     .countdown-line .together-days {
       color: var(--sage);
-      font-weight: 650;
+      font-weight: 600;
     }
 
     .countdown-line .together-days {
@@ -656,9 +675,9 @@
     .transport-subtitle {
       display: block;
       margin-bottom: 3px;
-      color: var(--text);
+      color: var(--body);
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 500;
       line-height: 1.55;
     }
 
@@ -673,6 +692,11 @@
       color: #5b5f56;
       font-size: 13px;
       line-height: 1.75;
+    }
+
+    .transport-lead strong {
+      color: inherit;
+      font-weight: 500;
     }
 
     .transport-note {
@@ -1317,8 +1341,8 @@
     <section class="calendar">
       <p class="eyebrow">Calendar</p>
 
-      <div class="calendar-month">OCTOBER 2026</div>
-      <div class="calendar-sub">10월 31일 토요일 · 오전 10시 30분</div>
+      <div class="calendar-month">10 / 31</div>
+      <div class="calendar-sub">SAT · 10:30 AM</div>
 
       <div class="calendar-grid" aria-label="2026년 10월 달력">
         <div class="head sun">SUN</div><div class="head">MON</div><div class="head">TUE</div><div class="head">WED</div><div class="head">THU</div><div class="head">FRI</div><div class="head">SAT</div>
