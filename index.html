@@ -624,10 +624,11 @@
       text-align: left;
     }
 
-    .transport-item + .transport-item { margin-top: 30px; }
+    /* Subway / Bus / Car / Parking 사이 */
+    .transport-item + .transport-item { margin-top: 32px; }
 
     .transport-title {
-      margin-bottom: 7px;
+      margin-bottom: 8px;
       color: var(--sage);
       font-size: 10px;
       font-weight: 600;
@@ -639,20 +640,47 @@
       margin: 0;
       color: #5b5f56;
       font-size: 13px;
-      line-height: 1.9;
+      line-height: 1.75;
+    }
+
+    /* 한 소분류 안의 정류장 / 방면 / 주차장 묶음 */
+    .transport-groups {
+      display: grid;
+      gap: 14px;
+    }
+
+    .transport-group {
+      min-width: 0;
     }
 
     .transport-subtitle {
       display: block;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
       color: var(--text);
       font-size: 14px;
       font-weight: 600;
+      line-height: 1.55;
+    }
+
+    .transport-detail {
+      color: #5b5f56;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .transport-lead {
+      margin: 0 0 14px;
+      color: #5b5f56;
+      font-size: 13px;
+      line-height: 1.75;
     }
 
     .transport-note {
+      display: block;
+      margin-top: 3px;
       color: var(--muted);
       font-size: 12px;
+      line-height: 1.65;
     }
 
 
@@ -1234,7 +1262,7 @@
       <div class="hero-date">2026 · 10 · 31 · 10:30 AM</div>
 
       <div class="hero-photo">
-        <img src="./images/main.jpg" alt="민재와 은별의 웨딩 사진" />
+        <img src="./images/main.webp" alt="민재와 은별의 웨딩 사진" />
       </div>
 
       <div class="hero-copy">
@@ -1379,54 +1407,78 @@
       <div class="transport">
         <div class="transport-item">
           <div class="transport-title">Subway</div>
-          <p class="transport-copy">
+          <div class="transport-copy">
             <span class="transport-subtitle">4호선 · 수인분당선 고잔역 2번 출구</span>
-            2번 출구에서 도보 20분 또는 AW컨벤션 셔틀버스 이용<br />
+            <div class="transport-detail">2번 출구에서 도보 20분 또는 AW컨벤션 셔틀버스 이용</div>
             <span class="transport-note">※ 셔틀버스는 5~7분 간격으로 수시 운행</span>
-          </p>
+          </div>
         </div>
 
         <div class="transport-item">
           <div class="transport-title">Bus</div>
-          <p class="transport-copy">
-            <strong>안산문화숲의광장 하차</strong><br />
-            · 88번<br /><br />
-            <strong>동남레이크빌 하차</strong><br />
-            · 99-1번 · 3100번<br /><br />
-            <strong>대림호수공원아파트 하차</strong><br />
-            · 3번 · 77번 · 98번
-          </p>
+          <div class="transport-groups">
+            <div class="transport-group">
+              <div class="transport-subtitle">안산문화숲의광장 하차</div>
+              <div class="transport-detail">· 88번</div>
+            </div>
+            <div class="transport-group">
+              <div class="transport-subtitle">동남레이크빌 하차</div>
+              <div class="transport-detail">· 99-1번 · 3100번</div>
+            </div>
+            <div class="transport-group">
+              <div class="transport-subtitle">대림호수공원아파트 하차</div>
+              <div class="transport-detail">· 3번 · 77번 · 98번</div>
+            </div>
+          </div>
         </div>
 
         <div class="transport-item">
           <div class="transport-title">Car</div>
-          <p class="transport-copy">
-            내비게이션에 <strong>AW컨벤션</strong> 또는 위 주소를 검색<br /><br />
-            <strong>서울 방면</strong><br />
-            안산JC → 안산IC → 법원·검찰청 → AW컨벤션<br /><br />
-            <strong>수원 방면</strong><br />
-            수인산업도로 → 법원·검찰청 → AW컨벤션<br /><br />
-            <strong>인천 방면</strong><br />
-            서안산IC → 법원·검찰청 → AW컨벤션<br /><br />
-            <strong>영동고속도로 이용 시</strong><br />
-            안산IC → 법원·검찰청 → AW컨벤션<br /><br />
-            <strong>서해안고속도로 이용 시</strong><br />
-            매송IC → 해안로(호수공원) → 시청 방면 → AW컨벤션
-          </p>
+          <p class="transport-lead">내비게이션에 <strong>AW컨벤션</strong> 또는 위 주소를 검색</p>
+          <div class="transport-groups">
+            <div class="transport-group">
+              <div class="transport-subtitle">서울 방면</div>
+              <div class="transport-detail">안산JC → 안산IC → 법원·검찰청 → AW컨벤션</div>
+            </div>
+            <div class="transport-group">
+              <div class="transport-subtitle">수원 방면</div>
+              <div class="transport-detail">수인산업도로 → 법원·검찰청 → AW컨벤션</div>
+            </div>
+            <div class="transport-group">
+              <div class="transport-subtitle">인천 방면</div>
+              <div class="transport-detail">서안산IC → 법원·검찰청 → AW컨벤션</div>
+            </div>
+            <div class="transport-group">
+              <div class="transport-subtitle">영동고속도로 이용 시</div>
+              <div class="transport-detail">안산IC → 법원·검찰청 → AW컨벤션</div>
+            </div>
+            <div class="transport-group">
+              <div class="transport-subtitle">서해안고속도로 이용 시</div>
+              <div class="transport-detail">매송IC → 해안로(호수공원) → 시청 방면 → AW컨벤션</div>
+            </div>
+          </div>
         </div>
 
         <div class="transport-item">
           <div class="transport-title">Parking</div>
-          <p class="transport-copy">
-            <strong>제1주차장</strong><br />
-            AW컨벤션 지하 1층 · 지하 2층<br /><br />
-            <strong>제2주차장</strong><br />
-            양지주차타워 (AW컨벤션주차타워)<br /><br />
-            <strong>제3주차장</strong><br />
-            AW컨벤션 정문 맞은편 공영주차장<br /><br />
-            <strong>제4주차장</strong><br />
-            MK주차타워
-          </p>
+          <div class="transport-groups">
+            <div class="transport-group">
+              <div class="transport-subtitle">제1주차장</div>
+              <div class="transport-detail">AW컨벤션 지하 1층 · 지하 2층</div>
+            </div>
+            <div class="transport-group">
+              <div class="transport-subtitle">제2주차장</div>
+              <div class="transport-detail">양지주차타워 (AW컨벤션주차타워)</div>
+            </div>
+            <div class="transport-group">
+              <div class="transport-subtitle">제3주차장</div>
+              <div class="transport-detail">AW컨벤션 정문 맞은편 공영주차장</div>
+            </div>
+            <div class="transport-group">
+              <div class="transport-subtitle">제4주차장</div>
+              <div class="transport-detail">MK주차타워</div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -1864,11 +1916,13 @@
       });
     })();
 
-    // 갤러리: ./images/gallery/01.jpg, 02.jpg ... 순서대로 자동 탐색
+    // 갤러리: ./images/gallery/01_1600.webp, 02_1600.webp ... 썸네일 자동 탐색 / 확대는 *_3200.webp
     (function () {
       const MAX_SCAN = 60;
       const GALLERY_DIR = "./images/gallery";
-      const EXT = "jpg";
+      const EXT = "webp";
+      const THUMB_SUFFIX = "_1600";
+      const FULL_SUFFIX = "_3200";
 
       const rail = document.getElementById("gallery-rail");
       const emptyMessage = document.getElementById("gallery-empty");
@@ -1913,7 +1967,7 @@
       }
 
       function makeItem(imageInfo, index) {
-        const { src, width, height } = imageInfo;
+        const { src, fullSrc, width, height } = imageInfo;
         const orientation = classifyImage(width, height);
         const wrap = document.createElement("div");
         wrap.className = ["gallery-item-wrap", orientation].join(" ");
@@ -1923,6 +1977,7 @@
 
         const img = document.createElement("img");
         img.src = src;
+        img.dataset.fullSrc = fullSrc;
         img.draggable = false;
         img.alt = `민재와 은별의 웨딩 사진 ${String(index).padStart(2, "0")}`;
         img.loading = index <= 6 ? "eager" : "lazy";
@@ -1944,11 +1999,12 @@
 
         for (let i = 1; i <= MAX_SCAN; i++) {
           const file = String(i).padStart(2, "0");
-          const src = `${GALLERY_DIR}/${file}.${EXT}`;
+          const src = `${GALLERY_DIR}/${file}${THUMB_SUFFIX}.${EXT}`;
+          const fullSrc = `${GALLERY_DIR}/${file}${FULL_SUFFIX}.${EXT}`;
           const info = await probeImage(src);
 
           if (!info) break;
-          images.push(info);
+          images.push({ ...info, fullSrc });
         }
 
         return images;
@@ -2050,8 +2106,14 @@
       function openLightbox(img) {
         document.body.classList.add("gallery-lightbox-open");
 
-        lightboxImage.src = img.currentSrc || img.src;
+        lightboxImage.src = img.dataset.fullSrc || img.currentSrc || img.src;
         lightboxImage.alt = img.alt || "웨딩 사진";
+
+        // 확대용 3200px 파일이 없을 때는 썸네일로 자연스럽게 대체.
+        lightboxImage.onerror = () => {
+          lightboxImage.onerror = null;
+          lightboxImage.src = img.currentSrc || img.src;
+        };
         lightbox.classList.add("open");
         lightbox.setAttribute("aria-hidden", "false");
       }
