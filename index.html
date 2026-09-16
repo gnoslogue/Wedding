@@ -467,8 +467,9 @@
     .hero {
       position: relative;
       width: 100%;
-      min-height: var(--hero-vh, 82svh);
-      height: var(--hero-vh, 82svh);
+      height: auto;
+      min-height: 0;
+      aspect-ratio: 390 / 844;
       padding: 0;
       overflow: hidden;
       background: var(--paper);
@@ -476,36 +477,33 @@
       text-align: center;
     }
 
-    .hero::after {
+    .hero::before {
       content: "";
       position: absolute;
       inset: 0;
       z-index: 1;
       pointer-events: none;
-      background:
-        linear-gradient(to bottom,
-          rgba(16, 17, 14, .18) 0%,
-          rgba(16, 17, 14, 0) 24%),
-        linear-gradient(to bottom,
-          rgba(250, 248, 242, 0) 0%,
-          rgba(250, 248, 242, 0) 78%,
-          rgba(250, 248, 242, .18) 83%,
-          rgba(250, 248, 242, .58) 90%,
-          var(--paper) 100%);
+      background: rgba(118, 130, 112, .028);
     }
 
-    .hero-date {
+    .hero::after {
+      content: "";
       position: absolute;
+      inset: 0;
       z-index: 2;
-      top: max(30px, calc(env(safe-area-inset-top) + 18px));
-      left: 20px;
-      right: 20px;
-      margin: 0;
-      color: rgba(255, 255, 255, .92);
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: .22em;
-      text-shadow: 0 1px 12px rgba(0,0,0,.16);
+      pointer-events: none;
+      background:
+        linear-gradient(to bottom,
+          rgba(18, 20, 16, .10) 0%,
+          rgba(18, 20, 16, 0) 20%),
+        linear-gradient(to bottom,
+          rgba(31, 36, 29, 0) 0%,
+          rgba(31, 36, 29, 0) 55%,
+          rgba(31, 36, 29, .06) 68%,
+          rgba(31, 36, 29, .13) 78%,
+          rgba(250, 248, 242, .10) 84%,
+          rgba(250, 248, 242, .56) 92%,
+          var(--paper) 100%);
     }
 
     .hero-photo {
@@ -516,54 +514,72 @@
       max-width: none;
       overflow: hidden;
       background: var(--paper);
+      z-index: 0;
     }
 
     .hero-photo img {
       position: absolute;
-      inset: 0;
+      top: -1.5%;
+      left: 0;
       display: block;
       width: 100%;
-      height: 100%;
+      height: 103%;
       object-fit: cover;
       object-position: center center;
       transform: translateZ(0);
       backface-visibility: hidden;
+      filter: brightness(1.01) contrast(.985) saturate(.965);
     }
 
-    .hero-copy {
+    .hero-topline {
       position: absolute;
-      z-index: 2;
-      left: 24px;
-      right: 24px;
-      bottom: max(34px, calc(env(safe-area-inset-bottom) + 22px));
-      padding: 0;
+      z-index: 3;
+      top: 3.1%;
+      left: 20px;
+      right: 20px;
+      text-align: center;
+      color: rgba(255, 255, 250, .92);
+      font-size: 10px;
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      text-shadow: 0 2px 10px rgba(22, 24, 20, .22);
     }
 
-    .hero-copy h1 {
-      margin: 0;
-      color: var(--text);
-      font-family: var(--serif);
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: .055em;
-      text-shadow: none;
+    .hero-bottom {
+      position: absolute;
+      z-index: 3;
+      top: 69%;
+      left: 0;
+      right: 0;
+      bottom: auto;
+      padding: 0 10px;
+      text-align: center;
+      transform: translateY(-50%);
     }
 
-    .hero-copy .dot {
-      display: inline-block;
-      padding: 0 .23em;
-      color: var(--sage);
-      font-size: .7em;
-      transform: translateY(-.08em);
+    .hero-names-svg {
+      display: block;
+      width: 96%;
+      max-width: none;
+      height: auto;
+      margin: 0 auto;
+      opacity: .97;
+      filter:
+        brightness(0)
+        invert(1)
+        drop-shadow(0 1px 2px rgba(52, 56, 46, .26))
+        drop-shadow(0 4px 14px rgba(22, 24, 20, .22));
     }
 
-    .hero-meta {
-      margin-top: 10px;
-      color: var(--sub);
-      font-size: 12px;
-      line-height: 1.8;
-      letter-spacing: .035em;
-      text-shadow: none;
+
+
+    @media (max-width: 420px) {
+      .hero-topline {
+        font-size: 9px;
+        letter-spacing: .13em;
+      }
     }
 
     /* INVITATION */
@@ -1651,17 +1667,18 @@
   <main class="page">
 
     <section class="hero">
-      <div class="hero-date">2026 · 10 · 31 · 10:30 AM</div>
-
       <div class="hero-photo">
         <img src="./images/main.webp" alt="민재와 은별의 웨딩 사진" />
       </div>
 
-      <div class="hero-copy">
-        <h1>조민재 <span class="dot">·</span> 김은별</h1>
-        <div class="hero-meta">
-          AW Convention · Patio Ballroom
-        </div>
+      <div class="hero-topline">2026.10.31 · 10:30 AM</div>
+
+      <div class="hero-bottom">
+        <img
+          class="hero-names-svg"
+          src="./images/minjae_eunbyeol.svg"
+          alt="Minjae & Eunbyeol"
+        />
       </div>
     </section>
 
@@ -2604,7 +2621,10 @@
       function onWheel(event) {
         if (finished) return;
         stop(event);
-        if (!opening && event.deltaY > 4) openCover();
+
+        // 마우스 휠뿐 아니라 트랙패드/DevTools 모바일 모드의
+        // 아주 작은 스크롤 델타도 첫 아래 스크롤로 인식한다.
+        if (!opening && event.deltaY > 0) openCover();
       }
 
       function onTouchStart(event) {
@@ -2623,7 +2643,7 @@
         if (finished) return;
         stop(event);
         // 손가락을 위로 밀면 페이지를 아래로 스크롤하려는 동작.
-        if (!opening && touchLastY - touchStartY < -22) openCover();
+        if (!opening && touchLastY - touchStartY < -12) openCover();
       }
 
       function onKeyDown(event) {
@@ -2656,6 +2676,27 @@
       window.addEventListener("touchstart", onTouchStart, { passive: true });
       window.addEventListener("touchmove", onTouchMove, { passive: false });
       window.addEventListener("touchend", onTouchEnd, { passive: false });
+
+      let pointerStartY = 0;
+      let pointerLastY = 0;
+
+      cover.addEventListener("pointerdown", event => {
+        if (finished) return;
+        pointerStartY = event.clientY;
+        pointerLastY = event.clientY;
+      });
+
+      cover.addEventListener("pointermove", event => {
+        if (finished) return;
+        pointerLastY = event.clientY;
+      });
+
+      cover.addEventListener("pointerup", event => {
+        if (finished) return;
+        pointerLastY = event.clientY;
+        if (!opening && pointerLastY - pointerStartY < -12) openCover();
+      });
+
       window.addEventListener("keydown", onKeyDown, { passive: false });
     })();
 
@@ -2672,9 +2713,10 @@
 
         if (!height) return;
 
-        // 표지는 정확히 한 화면, 메인 사진은 그보다 조금 짧게.
+        // 표지만 실제 화면 높이에 맞춘다.
+        // 메인 사진은 CSS의 고정 비율 캔버스로 처리해
+        // 브라우저 주소창/인앱 브라우저 높이에 따라 오버레이 위치가 흔들리지 않게 한다.
         root.style.setProperty("--cover-vh", `${Math.round(height)}px`);
-        root.style.setProperty("--hero-vh", `${Math.round(height * 0.82)}px`);
       }
 
       setInitialHeroViewport();
