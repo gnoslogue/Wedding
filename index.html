@@ -2513,6 +2513,7 @@
       let lightboxStartY = 0;
       let lightboxDeltaX = 0;
       let lightboxDragging = false;
+      let lightboxAnimating = false;
 
       const getGalleryImages = () =>
         Array.from(scroller.querySelectorAll(".gallery-item img"));
@@ -2532,52 +2533,124 @@
         }
       });
 
-      function setLightboxImage(index, direction = 0) {
+      function getWrappedIndex(index) {
         const images = getGalleryImages();
-        if (!images.length) return;
+        if (!images.length) return 0;
+        return (index + images.length) % images.length;
+      }
 
-        // 첫/마지막 사진에서도 자연스럽게 이어지도록 순환.
-        lightboxIndex = (index + images.length) % images.length;
-        const img = images[lightboxIndex];
+      function getImageInfo(index) {
+        const images = getGalleryImages();
+        const wrappedIndex = getWrappedIndex(index);
+        const img = images[wrappedIndex];
 
-        const fullSrc = img.dataset.fullSrc || img.currentSrc || img.src;
-        const fallbackSrc = img.currentSrc || img.src;
-
-        // 넘기는 순간 아주 짧게 미끄러지는 느낌.
-        if (direction) {
-          lightboxImage.style.transition = "none";
-          lightboxImage.style.opacity = ".35";
-          lightboxImage.style.transform =
-            `translateX(${direction > 0 ? 22 : -22}px) scale(.99)`;
-
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              lightboxImage.style.transition = "";
-              lightboxImage.style.opacity = "1";
-              lightboxImage.style.transform = "translateX(0) scale(1)";
-            });
-          });
-        } else {
-          lightboxImage.style.opacity = "1";
-          lightboxImage.style.transform = "translateX(0) scale(1)";
-        }
-
-        lightboxImage.src = fullSrc;
-        lightboxImage.alt = img.alt || `웨딩 사진 ${lightboxIndex + 1}`;
-
-        // 확대용 3200px 파일이 없을 때는 썸네일로 자연스럽게 대체.
-        lightboxImage.onerror = () => {
-          lightboxImage.onerror = null;
-          lightboxImage.src = fallbackSrc;
+        return {
+          index: wrappedIndex,
+          img,
+          fullSrc: img.dataset.fullSrc || img.currentSrc || img.src,
+          fallbackSrc: img.currentSrc || img.src
         };
       }
 
+      function resolveImageSource(index) {
+        const info = getImageInfo(index);
+
+        return new Promise(resolve => {
+          const preload = new Image();
+
+          preload.onload = () => resolve({ ...info, src: info.fullSrc });
+          preload.onerror = () => {
+            if (info.fallbackSrc === info.fullSrc) {
+              resolve({ ...info, src: info.fallbackSrc });
+              return;
+            }
+
+            const fallback = new Image();
+            fallback.onload = () => resolve({ ...info, src: info.fallbackSrc });
+            fallback.onerror = () => resolve({ ...info, src: info.fallbackSrc });
+            fallback.src = info.fallbackSrc;
+          };
+
+          preload.src = info.fullSrc;
+        });
+      }
+
+      function setLightboxImage(index) {
+        const info = getImageInfo(index);
+        lightboxIndex = info.index;
+
+        lightboxImage.style.transition = "none";
+        lightboxImage.style.opacity = "1";
+        lightboxImage.style.transform = "translateX(0) scale(1)";
+        lightboxImage.src = info.fullSrc;
+        lightboxImage.alt = info.img.alt || `웨딩 사진 ${lightboxIndex + 1}`;
+
+        lightboxImage.onerror = () => {
+          lightboxImage.onerror = null;
+          lightboxImage.src = info.fallbackSrc;
+        };
+
+        requestAnimationFrame(() => {
+          lightboxImage.style.transition = "";
+        });
+      }
+
+      async function navigateLightbox(targetIndex, direction) {
+        if (lightboxAnimating) return;
+
+        const images = getGalleryImages();
+        if (images.length < 2) return;
+
+        lightboxAnimating = true;
+
+        const resolvedPromise = resolveImageSource(targetIndex);
+
+        // 현재 사진은 손가락이 움직이던 방향 그대로 화면 밖으로 보낸다.
+        lightboxImage.style.transition =
+          "transform .20s cubic-bezier(.4,0,.6,1), opacity .18s ease";
+        lightboxImage.style.transform =
+          `translateX(${direction > 0 ? "-110vw" : "110vw"}) scale(.985)`;
+        lightboxImage.style.opacity = ".12";
+
+        await new Promise(resolve => setTimeout(resolve, 205));
+        const next = await resolvedPromise;
+
+        lightboxIndex = next.index;
+        lightboxImage.onerror = null;
+        lightboxImage.src = next.src;
+        lightboxImage.alt =
+          next.img.alt || `웨딩 사진 ${lightboxIndex + 1}`;
+
+        // 새 사진은 반대편 화면 밖에서 시작해서 중앙으로 들어온다.
+        lightboxImage.style.transition = "none";
+        lightboxImage.style.transform =
+          `translateX(${direction > 0 ? "110vw" : "-110vw"}) scale(.985)`;
+        lightboxImage.style.opacity = ".12";
+
+        // 새 src와 시작 위치가 실제로 그려진 뒤 중앙으로 이동시킨다.
+        lightboxImage.getBoundingClientRect();
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            lightboxImage.style.transition =
+              "transform .26s cubic-bezier(.22,.75,.25,1), opacity .20s ease";
+            lightboxImage.style.transform = "translateX(0) scale(1)";
+            lightboxImage.style.opacity = "1";
+          });
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 280));
+
+        lightboxImage.style.transition = "";
+        lightboxAnimating = false;
+      }
+
       function showPrevious() {
-        setLightboxImage(lightboxIndex - 1, -1);
+        navigateLightbox(lightboxIndex - 1, -1);
       }
 
       function showNext() {
-        setLightboxImage(lightboxIndex + 1, 1);
+        navigateLightbox(lightboxIndex + 1, 1);
       }
 
       function openLightbox(img) {
@@ -2612,7 +2685,7 @@
 
       // 확대 화면: 손가락 스와이프 / 마우스 드래그로 이전·다음 사진.
       lightboxImage.addEventListener("pointerdown", event => {
-        if (!lightbox.classList.contains("open")) return;
+        if (!lightbox.classList.contains("open") || lightboxAnimating) return;
 
         lightboxPointerId = event.pointerId;
         lightboxStartX = event.clientX;
@@ -2655,12 +2728,14 @@
 
         if (Math.abs(dx) >= threshold) {
           // 손가락을 왼쪽으로 밀면 다음 사진, 오른쪽이면 이전 사진.
+          // 현재 사진을 중앙으로 되돌리지 않고 그대로 화면 밖까지 이어서 보낸다.
           if (dx < 0) showNext();
           else showPrevious();
           return;
         }
 
-        lightboxImage.style.transition = "";
+        lightboxImage.style.transition =
+          "transform .22s cubic-bezier(.22,.75,.25,1), opacity .18s ease";
         lightboxImage.style.transform = "translateX(0) scale(1)";
         lightboxImage.style.opacity = "1";
       }
