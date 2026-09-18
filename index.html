@@ -1240,6 +1240,7 @@
       inset: 0;
       z-index: 1200;
       display: flex;
+      overflow: hidden;
       align-items: center;
       justify-content: center;
       padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
@@ -2336,161 +2337,443 @@
     })();
 
     // 갤러리: ./images/gallery/01_1600.webp, 02_1600.webp ... 썸네일 자동 탐색 / 확대는 *_3200.webp
+    // 갤러리 확대 보기 + 좌우 넘김 + 핀치 줌
     (function () {
-      const MAX_SCAN = 60;
-      const GALLERY_DIR = "./images/gallery";
-      const EXT = "webp";
-      const THUMB_SUFFIX = "_1600";
-      const FULL_SUFFIX = "_3200";
-
-      const rail = document.getElementById("gallery-rail");
-      const emptyMessage = document.getElementById("gallery-empty");
-
-      if (!rail || !emptyMessage) return;
-
-      function probeImage(src) {
-        return new Promise(resolve => {
-          const probe = new Image();
-
-          probe.onload = () => {
-            resolve({
-              src,
-              width: probe.naturalWidth,
-              height: probe.naturalHeight
-            });
-          };
-
-          probe.onerror = () => resolve(null);
-          probe.src = src;
-        });
-      }
-
-      function classifyImage(width, height) {
-        const ratio = width / height;
-
-        if (ratio > 1.18) return "landscape";
-        if (ratio < 0.82) return "portrait";
-        return "square";
-      }
-
-      function normalizedRatio(width, height, orientation) {
-        const ratio = width / height;
-
-        if (orientation === "landscape") {
-          return Math.min(Math.max(ratio, 1.18), 1.65);
-        }
-        if (orientation === "portrait") {
-          return Math.min(Math.max(ratio, 0.66), 0.82);
-        }
-        return Math.min(Math.max(ratio, 0.9), 1.08);
-      }
-
-      function makeItem(imageInfo, index) {
-        const { src, fullSrc, width, height } = imageInfo;
-        const orientation = classifyImage(width, height);
-        const wrap = document.createElement("div");
-        wrap.className = ["gallery-item-wrap", orientation].join(" ");
-
-        const frame = document.createElement("div");
-        frame.className = "gallery-item";
-
-        const img = document.createElement("img");
-        img.src = src;
-        img.dataset.fullSrc = fullSrc;
-        img.draggable = false;
-        img.alt = `민재와 은별의 웨딩 사진 ${String(index).padStart(2, "0")}`;
-        img.loading = index <= 6 ? "eager" : "lazy";
-        img.decoding = "async";
-
-        frame.appendChild(img);
-        wrap.appendChild(frame);
-
-        const number = document.createElement("div");
-        number.className = "gallery-index";
-        number.textContent = String(index).padStart(2, "0");
-        wrap.appendChild(number);
-
-        return wrap;
-      }
-
-      async function discoverImages() {
-        const images = [];
-
-        for (let i = 1; i <= MAX_SCAN; i++) {
-          const file = String(i).padStart(2, "0");
-          const src = `${GALLERY_DIR}/${file}${THUMB_SUFFIX}.${EXT}`;
-          const fullSrc = `${GALLERY_DIR}/${file}${FULL_SUFFIX}.${EXT}`;
-          const info = await probeImage(src);
-
-          if (!info) break;
-          images.push({ ...info, fullSrc });
-        }
-
-        return images;
-      }
-
-      // PC에서도 마우스로 잡아 끌 수 있게 한다.
       const scroller = document.getElementById("gallery-scroll");
-      if (scroller) {
-        let dragging = false;
-        let startX = 0;
-        let startScrollLeft = 0;
+      const lightbox = document.getElementById("gallery-lightbox");
+      const lightboxImage = document.getElementById("gallery-lightbox-image");
+      const closeButton = document.getElementById("gallery-lightbox-close");
 
-        scroller.addEventListener("wheel", event => {
-          const canScrollHorizontally =
-            scroller.scrollWidth > scroller.clientWidth;
+      if (!scroller || !lightbox || !lightboxImage || !closeButton) return;
 
-          if (!canScrollHorizontally) return;
+      let pointerStartX = 0;
+      let pointerStartY = 0;
+      let moved = false;
 
-          // 일반 마우스 휠의 세로 입력을 가로 스크롤로 변환.
-          // 터치패드의 실제 가로 제스처(deltaX)는 그대로 존중한다.
-          const delta =
-            Math.abs(event.deltaX) > Math.abs(event.deltaY)
-              ? event.deltaX
-              : event.deltaY;
+      let lightboxIndex = 0;
+      let lightboxAnimating = false;
 
-          if (delta === 0) return;
+      // 줌/팬 상태
+      const MIN_SCALE = 1;
+      const MAX_SCALE = 4;
+      let scale = 1;
+      let panX = 0;
+      let panY = 0;
 
-          scroller.scrollLeft += delta;
-          event.preventDefault();
-        }, { passive: false });
+      // 제스처 상태
+      const pointers = new Map();
+      let gestureStartX = 0;
+      let gestureStartY = 0;
+      let gestureStartPanX = 0;
+      let gestureStartPanY = 0;
+      let swipeDeltaX = 0;
+      let pinchStartDistance = 0;
+      let pinchStartScale = 1;
+      let gestureWasPinch = false;
 
-        scroller.addEventListener("pointerdown", event => {
-          if (event.pointerType === "touch") return;
+      // 더블탭
+      let lastTapTime = 0;
+      let lastTapX = 0;
+      let lastTapY = 0;
 
-          dragging = true;
-          startX = event.clientX;
-          startScrollLeft = scroller.scrollLeft;
-          scroller.classList.add("dragging");
-          scroller.setPointerCapture?.(event.pointerId);
-        });
+      const getGalleryImages = () =>
+        Array.from(scroller.querySelectorAll(".gallery-item img"));
 
-        scroller.addEventListener("pointermove", event => {
-          if (!dragging) return;
-          scroller.scrollLeft = startScrollLeft - (event.clientX - startX);
-        });
+      const clamp = (value, min, max) =>
+        Math.min(max, Math.max(min, value));
 
-        const endDrag = event => {
-          if (!dragging) return;
-          dragging = false;
-          scroller.classList.remove("dragging");
-          scroller.releasePointerCapture?.(event.pointerId);
-        };
+      function applyImageTransform(animated = false) {
+        lightboxImage.style.transition = animated
+          ? "transform .22s cubic-bezier(.22,.75,.25,1), opacity .18s ease"
+          : "none";
 
-        scroller.addEventListener("pointerup", endDrag);
-        scroller.addEventListener("pointercancel", endDrag);
+        lightboxImage.style.transform =
+          `translate3d(${panX}px, ${panY}px, 0) scale(${scale})`;
+        lightboxImage.style.opacity = "1";
       }
 
-      discoverImages().then(images => {
-        if (!images.length) {
-          emptyMessage.style.display = "block";
+      function resetZoom(animated = false) {
+        scale = 1;
+        panX = 0;
+        panY = 0;
+        applyImageTransform(animated);
+      }
+
+      function limitPan() {
+        if (scale <= 1) {
+          panX = 0;
+          panY = 0;
           return;
         }
 
-        images.forEach((imageInfo, idx) => {
-          rail.appendChild(makeItem(imageInfo, idx + 1));
+        const rect = lightboxImage.getBoundingClientRect();
+        const baseWidth = rect.width / scale;
+        const baseHeight = rect.height / scale;
+
+        const maxX = Math.max(0, (baseWidth * scale - window.innerWidth) / 2 + 18);
+        const maxY = Math.max(0, (baseHeight * scale - window.innerHeight) / 2 + 18);
+
+        panX = clamp(panX, -maxX, maxX);
+        panY = clamp(panY, -maxY, maxY);
+      }
+
+      function getWrappedIndex(index) {
+        const images = getGalleryImages();
+        if (!images.length) return 0;
+        return (index + images.length) % images.length;
+      }
+
+      function getImageInfo(index) {
+        const images = getGalleryImages();
+        const wrappedIndex = getWrappedIndex(index);
+        const img = images[wrappedIndex];
+
+        return {
+          index: wrappedIndex,
+          img,
+          fullSrc: img.dataset.fullSrc || img.currentSrc || img.src,
+          fallbackSrc: img.currentSrc || img.src
+        };
+      }
+
+      function resolveImageSource(index) {
+        const info = getImageInfo(index);
+
+        return new Promise(resolve => {
+          const preload = new Image();
+
+          preload.onload = () => resolve({ ...info, src: info.fullSrc });
+          preload.onerror = () => {
+            if (info.fallbackSrc === info.fullSrc) {
+              resolve({ ...info, src: info.fallbackSrc });
+              return;
+            }
+
+            const fallback = new Image();
+            fallback.onload = () => resolve({ ...info, src: info.fallbackSrc });
+            fallback.onerror = () => resolve({ ...info, src: info.fallbackSrc });
+            fallback.src = info.fallbackSrc;
+          };
+
+          preload.src = info.fullSrc;
+        });
+      }
+
+      function setLightboxImage(index) {
+        const info = getImageInfo(index);
+        lightboxIndex = info.index;
+
+        resetZoom(false);
+
+        lightboxImage.src = info.fullSrc;
+        lightboxImage.alt = info.img.alt || `웨딩 사진 ${lightboxIndex + 1}`;
+
+        lightboxImage.onerror = () => {
+          lightboxImage.onerror = null;
+          lightboxImage.src = info.fallbackSrc;
+        };
+
+        requestAnimationFrame(() => {
+          lightboxImage.style.transition = "";
+        });
+      }
+
+      async function navigateLightbox(targetIndex, direction) {
+        if (lightboxAnimating || scale > 1.001) return;
+
+        const images = getGalleryImages();
+        if (images.length < 2) return;
+
+        lightboxAnimating = true;
+        const resolvedPromise = resolveImageSource(targetIndex);
+
+        // 현재 사진을 스와이프 방향 그대로 화면 밖으로 보냄
+        lightboxImage.style.transition =
+          "transform .20s cubic-bezier(.4,0,.6,1), opacity .18s ease";
+        lightboxImage.style.transform =
+          `translate3d(${direction > 0 ? "-110vw" : "110vw"}, 0, 0) scale(.985)`;
+        lightboxImage.style.opacity = ".12";
+
+        await new Promise(resolve => setTimeout(resolve, 205));
+        const next = await resolvedPromise;
+
+        lightboxIndex = next.index;
+        scale = 1;
+        panX = 0;
+        panY = 0;
+
+        lightboxImage.onerror = null;
+        lightboxImage.src = next.src;
+        lightboxImage.alt =
+          next.img.alt || `웨딩 사진 ${lightboxIndex + 1}`;
+
+        // 새 사진을 반대편 화면 밖에 배치
+        lightboxImage.style.transition = "none";
+        lightboxImage.style.transform =
+          `translate3d(${direction > 0 ? "110vw" : "-110vw"}, 0, 0) scale(.985)`;
+        lightboxImage.style.opacity = ".12";
+
+        lightboxImage.getBoundingClientRect();
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            lightboxImage.style.transition =
+              "transform .26s cubic-bezier(.22,.75,.25,1), opacity .20s ease";
+            lightboxImage.style.transform = "translate3d(0,0,0) scale(1)";
+            lightboxImage.style.opacity = "1";
+          });
         });
 
+        await new Promise(resolve => setTimeout(resolve, 280));
+        lightboxImage.style.transition = "";
+        lightboxAnimating = false;
+      }
+
+      function showPrevious() {
+        navigateLightbox(lightboxIndex - 1, -1);
+      }
+
+      function showNext() {
+        navigateLightbox(lightboxIndex + 1, 1);
+      }
+
+      function openLightbox(img) {
+        const images = getGalleryImages();
+        const clickedIndex = images.indexOf(img);
+        lightboxIndex = clickedIndex >= 0 ? clickedIndex : 0;
+
+        document.body.classList.add("gallery-lightbox-open");
+        setLightboxImage(lightboxIndex);
+        lightbox.classList.add("open");
+        lightbox.setAttribute("aria-hidden", "false");
+      }
+
+      function closeLightbox() {
+        if (!lightbox.classList.contains("open")) return;
+
+        lightbox.classList.remove("open");
+        lightbox.setAttribute("aria-hidden", "true");
+        lightboxImage.removeAttribute("src");
+        lightboxImage.classList.remove("is-dragging");
+
+        pointers.clear();
+        gestureWasPinch = false;
+        lightboxAnimating = false;
+        scale = 1;
+        panX = 0;
+        panY = 0;
+
+        lightboxImage.style.removeProperty("transform");
+        lightboxImage.style.removeProperty("opacity");
+        lightboxImage.style.removeProperty("transition");
+
+        document.body.classList.remove("gallery-lightbox-open");
+      }
+
+      // 썸네일 클릭
+      scroller.addEventListener("pointerdown", event => {
+        pointerStartX = event.clientX;
+        pointerStartY = event.clientY;
+        moved = false;
+      });
+
+      scroller.addEventListener("pointermove", event => {
+        if (
+          Math.abs(event.clientX - pointerStartX) > 8 ||
+          Math.abs(event.clientY - pointerStartY) > 8
+        ) {
+          moved = true;
+        }
+      });
+
+      scroller.addEventListener("click", event => {
+        const img = event.target.closest(".gallery-item img");
+        if (!img || moved) return;
+        openLightbox(img);
+      });
+
+      function pointerDistance() {
+        const pts = Array.from(pointers.values());
+        if (pts.length < 2) return 0;
+        return Math.hypot(
+          pts[1].x - pts[0].x,
+          pts[1].y - pts[0].y
+        );
+      }
+
+      lightboxImage.addEventListener("pointerdown", event => {
+        if (!lightbox.classList.contains("open") || lightboxAnimating) return;
+
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        lightboxImage.setPointerCapture?.(event.pointerId);
+        lightboxImage.classList.add("is-dragging");
+
+        if (pointers.size === 1) {
+          gestureStartX = event.clientX;
+          gestureStartY = event.clientY;
+          gestureStartPanX = panX;
+          gestureStartPanY = panY;
+          swipeDeltaX = 0;
+          gestureWasPinch = false;
+        } else if (pointers.size === 2) {
+          gestureWasPinch = true;
+          pinchStartDistance = pointerDistance();
+          pinchStartScale = scale;
+        }
+      });
+
+      lightboxImage.addEventListener("pointermove", event => {
+        if (!pointers.has(event.pointerId) || lightboxAnimating) return;
+
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+        // 두 손가락: 핀치 줌
+        if (pointers.size >= 2) {
+          gestureWasPinch = true;
+
+          const distance = pointerDistance();
+          if (!pinchStartDistance) {
+            pinchStartDistance = distance;
+            pinchStartScale = scale;
+            return;
+          }
+
+          scale = clamp(
+            pinchStartScale * (distance / pinchStartDistance),
+            MIN_SCALE,
+            MAX_SCALE
+          );
+
+          limitPan();
+          applyImageTransform(false);
+          return;
+        }
+
+        // 한 손가락
+        const dx = event.clientX - gestureStartX;
+        const dy = event.clientY - gestureStartY;
+
+        if (scale > 1.001) {
+          // 확대 상태에서는 사진 내부 이동
+          panX = gestureStartPanX + dx;
+          panY = gestureStartPanY + dy;
+          limitPan();
+          applyImageTransform(false);
+          return;
+        }
+
+        // 1배 상태에서는 좌우 스와이프로 다음/이전 사진
+        if (Math.abs(dx) < Math.abs(dy)) return;
+
+        swipeDeltaX = dx;
+        const resisted = dx * .72;
+        const fade = Math.max(.72, 1 - Math.abs(dx) / 900);
+
+        lightboxImage.style.transition = "none";
+        lightboxImage.style.transform =
+          `translate3d(${resisted}px, 0, 0) scale(.995)`;
+        lightboxImage.style.opacity = String(fade);
+      });
+
+      function finishPointer(event) {
+        if (!pointers.has(event.pointerId)) return;
+
+        pointers.delete(event.pointerId);
+
+        // 핀치 중 한 손가락이 먼저 떨어졌을 때 남은 한 손가락의 기준점 재설정
+        if (pointers.size === 1) {
+          const remaining = Array.from(pointers.values())[0];
+          gestureStartX = remaining.x;
+          gestureStartY = remaining.y;
+          gestureStartPanX = panX;
+          gestureStartPanY = panY;
+          pinchStartDistance = 0;
+          return;
+        }
+
+        if (pointers.size > 0) return;
+
+        lightboxImage.classList.remove("is-dragging");
+        pinchStartDistance = 0;
+
+        if (gestureWasPinch) {
+          gestureWasPinch = false;
+
+          if (scale < 1.06) {
+            resetZoom(true);
+          } else {
+            limitPan();
+            applyImageTransform(true);
+          }
+          return;
+        }
+
+        if (scale > 1.001) {
+          limitPan();
+          applyImageTransform(true);
+          return;
+        }
+
+        const threshold = Math.min(72, window.innerWidth * .16);
+        const dx = swipeDeltaX;
+        swipeDeltaX = 0;
+
+        if (Math.abs(dx) >= threshold) {
+          if (dx < 0) showNext();
+          else showPrevious();
+          return;
+        }
+
+        resetZoom(true);
+      }
+
+      lightboxImage.addEventListener("pointerup", finishPointer);
+      lightboxImage.addEventListener("pointercancel", finishPointer);
+
+      // 더블탭/더블클릭: 1배 ↔ 2.35배
+      lightboxImage.addEventListener("click", event => {
+        if (lightboxAnimating || gestureWasPinch) return;
+
+        const now = performance.now();
+        const closeInTime = now - lastTapTime < 320;
+        const closeInSpace =
+          Math.hypot(event.clientX - lastTapX, event.clientY - lastTapY) < 36;
+
+        if (closeInTime && closeInSpace) {
+          if (scale > 1.05) {
+            resetZoom(true);
+          } else {
+            scale = 2.35;
+            panX = 0;
+            panY = 0;
+            applyImageTransform(true);
+          }
+
+          lastTapTime = 0;
+          return;
+        }
+
+        lastTapTime = now;
+        lastTapX = event.clientX;
+        lastTapY = event.clientY;
+      });
+
+      closeButton.addEventListener("click", closeLightbox);
+
+      lightbox.addEventListener("click", event => {
+        if (event.target === lightbox) closeLightbox();
+      });
+
+      document.addEventListener("keydown", event => {
+        if (!lightbox.classList.contains("open")) return;
+
+        if (event.key === "Escape") {
+          closeLightbox();
+        } else if (scale <= 1.001 && event.key === "ArrowLeft") {
+          showPrevious();
+        } else if (scale <= 1.001 && event.key === "ArrowRight") {
+          showNext();
+        }
       });
     })();
 
