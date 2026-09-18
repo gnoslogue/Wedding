@@ -1263,12 +1263,22 @@
       object-fit: contain;
       border-radius: 5px;
       box-shadow: 0 12px 40px rgba(0,0,0,.22);
-      transform: scale(.985);
-      transition: transform .24s ease;
+      transform: translateX(0) scale(.985);
+      transition: transform .24s ease, opacity .18s ease;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-drag: none;
+      cursor: grab;
+      will-change: transform, opacity;
     }
 
     .gallery-lightbox.open .gallery-lightbox-image {
-      transform: scale(1);
+      transform: translateX(0) scale(1);
+    }
+
+    .gallery-lightbox-image.is-dragging {
+      cursor: grabbing;
+      transition: none;
     }
 
     .gallery-lightbox-close {
@@ -2497,6 +2507,16 @@
       let pointerStartY = 0;
       let moved = false;
 
+      let lightboxIndex = 0;
+      let lightboxPointerId = null;
+      let lightboxStartX = 0;
+      let lightboxStartY = 0;
+      let lightboxDeltaX = 0;
+      let lightboxDragging = false;
+
+      const getGalleryImages = () =>
+        Array.from(scroller.querySelectorAll(".gallery-item img"));
+
       scroller.addEventListener("pointerdown", event => {
         pointerStartX = event.clientX;
         pointerStartY = event.clientY;
@@ -2512,17 +2532,61 @@
         }
       });
 
-      function openLightbox(img) {
-        document.body.classList.add("gallery-lightbox-open");
+      function setLightboxImage(index, direction = 0) {
+        const images = getGalleryImages();
+        if (!images.length) return;
 
-        lightboxImage.src = img.dataset.fullSrc || img.currentSrc || img.src;
-        lightboxImage.alt = img.alt || "웨딩 사진";
+        // 첫/마지막 사진에서도 자연스럽게 이어지도록 순환.
+        lightboxIndex = (index + images.length) % images.length;
+        const img = images[lightboxIndex];
+
+        const fullSrc = img.dataset.fullSrc || img.currentSrc || img.src;
+        const fallbackSrc = img.currentSrc || img.src;
+
+        // 넘기는 순간 아주 짧게 미끄러지는 느낌.
+        if (direction) {
+          lightboxImage.style.transition = "none";
+          lightboxImage.style.opacity = ".35";
+          lightboxImage.style.transform =
+            `translateX(${direction > 0 ? 22 : -22}px) scale(.99)`;
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              lightboxImage.style.transition = "";
+              lightboxImage.style.opacity = "1";
+              lightboxImage.style.transform = "translateX(0) scale(1)";
+            });
+          });
+        } else {
+          lightboxImage.style.opacity = "1";
+          lightboxImage.style.transform = "translateX(0) scale(1)";
+        }
+
+        lightboxImage.src = fullSrc;
+        lightboxImage.alt = img.alt || `웨딩 사진 ${lightboxIndex + 1}`;
 
         // 확대용 3200px 파일이 없을 때는 썸네일로 자연스럽게 대체.
         lightboxImage.onerror = () => {
           lightboxImage.onerror = null;
-          lightboxImage.src = img.currentSrc || img.src;
+          lightboxImage.src = fallbackSrc;
         };
+      }
+
+      function showPrevious() {
+        setLightboxImage(lightboxIndex - 1, -1);
+      }
+
+      function showNext() {
+        setLightboxImage(lightboxIndex + 1, 1);
+      }
+
+      function openLightbox(img) {
+        const images = getGalleryImages();
+        const clickedIndex = images.indexOf(img);
+        lightboxIndex = clickedIndex >= 0 ? clickedIndex : 0;
+
+        document.body.classList.add("gallery-lightbox-open");
+        setLightboxImage(lightboxIndex);
         lightbox.classList.add("open");
         lightbox.setAttribute("aria-hidden", "false");
       }
@@ -2533,6 +2597,9 @@
         lightbox.classList.remove("open");
         lightbox.setAttribute("aria-hidden", "true");
         lightboxImage.removeAttribute("src");
+        lightboxImage.style.removeProperty("transform");
+        lightboxImage.style.removeProperty("opacity");
+        lightboxImage.classList.remove("is-dragging");
 
         document.body.classList.remove("gallery-lightbox-open");
       }
@@ -2543,6 +2610,64 @@
         openLightbox(img);
       });
 
+      // 확대 화면: 손가락 스와이프 / 마우스 드래그로 이전·다음 사진.
+      lightboxImage.addEventListener("pointerdown", event => {
+        if (!lightbox.classList.contains("open")) return;
+
+        lightboxPointerId = event.pointerId;
+        lightboxStartX = event.clientX;
+        lightboxStartY = event.clientY;
+        lightboxDeltaX = 0;
+        lightboxDragging = true;
+
+        lightboxImage.setPointerCapture?.(event.pointerId);
+        lightboxImage.classList.add("is-dragging");
+      });
+
+      lightboxImage.addEventListener("pointermove", event => {
+        if (!lightboxDragging || event.pointerId !== lightboxPointerId) return;
+
+        const dx = event.clientX - lightboxStartX;
+        const dy = event.clientY - lightboxStartY;
+
+        // 세로 제스처보다 가로 움직임이 확실할 때만 사진을 따라오게 한다.
+        if (Math.abs(dx) < Math.abs(dy)) return;
+
+        lightboxDeltaX = dx;
+        const resisted = dx * .72;
+        const fade = Math.max(.72, 1 - Math.abs(dx) / 900);
+
+        lightboxImage.style.transform =
+          `translateX(${resisted}px) scale(.995)`;
+        lightboxImage.style.opacity = String(fade);
+      });
+
+      function finishLightboxSwipe(event) {
+        if (!lightboxDragging) return;
+        if (event && lightboxPointerId !== null && event.pointerId !== lightboxPointerId) return;
+
+        const threshold = Math.min(72, window.innerWidth * .16);
+        const dx = lightboxDeltaX;
+
+        lightboxDragging = false;
+        lightboxPointerId = null;
+        lightboxImage.classList.remove("is-dragging");
+
+        if (Math.abs(dx) >= threshold) {
+          // 손가락을 왼쪽으로 밀면 다음 사진, 오른쪽이면 이전 사진.
+          if (dx < 0) showNext();
+          else showPrevious();
+          return;
+        }
+
+        lightboxImage.style.transition = "";
+        lightboxImage.style.transform = "translateX(0) scale(1)";
+        lightboxImage.style.opacity = "1";
+      }
+
+      lightboxImage.addEventListener("pointerup", finishLightboxSwipe);
+      lightboxImage.addEventListener("pointercancel", finishLightboxSwipe);
+
       closeButton.addEventListener("click", closeLightbox);
 
       lightbox.addEventListener("click", event => {
@@ -2550,7 +2675,15 @@
       });
 
       document.addEventListener("keydown", event => {
-        if (event.key === "Escape") closeLightbox();
+        if (!lightbox.classList.contains("open")) return;
+
+        if (event.key === "Escape") {
+          closeLightbox();
+        } else if (event.key === "ArrowLeft") {
+          showPrevious();
+        } else if (event.key === "ArrowRight") {
+          showNext();
+        }
       });
     })();
 
